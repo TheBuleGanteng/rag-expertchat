@@ -1,0 +1,65 @@
+{% load i18n %}
+
+<!-- this page contains html that is injected into index.html via ragsources.js. This removes the need to manage multiple forms (e.g RagUrlFormSet, RagDocForm, and input_form) via aicaht_chat/index_view-->
+<!-- In Django, when using formsets (multiple forms being managed together), the management_form is a hidden form that contains metadata needed to properly handle the formset. 
+     The management_form includes:
+        1. The total number of forms in the formset (TOTAL_FORMS).
+        2. The number of forms that should be treated as initial data (INITIAL_FORMS).
+        3. The number of forms that can be deleted (MIN_NUM_FORMS, MAX_NUM_FORMS). -->
+<form id="RagUrlForm" method="POST" action="{% url 'aichat_chat:rag_url' %}">
+    {% csrf_token %}
+
+    <!-- Django uses this hidden management form to correctly interpret how many forms it should process when the formset is submitted. Without the management_form, the formset wouldn't know how to validate or handle the multiple forms on the server side.-->
+    {{ formset.management_form }}
+            
+        <!-- div to hold formset -->
+        <div id='formset-container'>
+            {% for form in formset %}
+                
+                <div class='row align-items-center mb-2'>
+                    <div class='col-1 fw-bold' id='url-label-div'>
+                        URL {{ forloop.counter }}
+                    </div>
+                    <div class='col-6' id='url-div'>
+                        {{ form.source }}
+                    </div>
+                    <div class='col d-none' id='include-subdomains-div'>
+                        {{ form.include_subdomains.label_tag }} {{ form.include_subdomains }}
+                    </div>
+                    <!-- Add the hidden id field here to ensure it gets submitted -->
+                    {{ form.id }}
+                    <div class='col-1' id='delete-checkbox-remove-icon-div'>
+                        <div class='d-none' id='hidden-delete-checkbox-div'>
+                            {{ form.DELETE }} <!-- this is the hidden delete checkbox that JS sets as ticked if the user clicks the remove icon -->
+                        </div>
+                        <i class='bi bi-x-circle-fill remove-icon fs-4' name='remove-icon-url'>
+                        </i>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <!-- /div to hold formset -->
+        
+        <!-- div to hold 'add url' button -->
+        <div class='row mb-2' id='remove-url-container'>
+            <div class='col d-flex align-items-center'>
+                <i class='bi bi-plus-circle-fill add-icon fs-4 me-1' id='add-additional-url-icon'>
+                </i>
+                {% trans "Add additional URL" %}
+            </div>
+        </div>
+        <!-- /div to hold 'add url' button -->
+
+    <!-- do not use websites button -->
+    <button type='button' class="btn btn-secondary btn-sm btn-xsm w-100" id='dont-use-urls-button'>
+        {% trans "Do not use websites" %}
+    </button>
+    <!-- do not use websites button -->
+
+    <!-- upload websites button -->
+    <button type='submit' class="btn btn-primary mt-1 w-100" id='urls-save-button'>
+        {% trans "Save" %}
+    </button>
+    <!-- /upload websites button -->
+    
+</form>

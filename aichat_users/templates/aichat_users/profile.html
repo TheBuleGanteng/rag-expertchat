@@ -1,0 +1,1115 @@
+{% extends 'aichat_users/layout.html' %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "Profile" %}
+{% endblock %}
+
+{% block main %}
+    <div class='container-fluid pt-2 pb-5'>
+
+        <!-- instructional text -->
+        <div class='container-fluid ps-0 mb-1'>
+            <div class='container-fluid container-instructions-start-bold'>
+                {% trans "Update the fields below as needed and save your changes to update your profile." %}
+            </div>
+        </div>
+        <!-- /instructional text -->
+
+
+        <!-- ProfileForm -->
+        <form action='{% url "aichat_users:profile" %}' class='profile-form' name='profile-form' id='profile-form' method='post'>
+            {% csrf_token %}
+            {{ profile_form.non_field_errors }}
+            {{ profile_form.non_field_errors }}
+
+            <!-- section: personal info -->
+            <div class='container-fluid ps-0 mb-4 mt-4'>
+                
+                <!-- section header: Personal info -->
+                <div class='container-fluid container-instructions-start-bold fs-3 fst-italic' id='container-fluid container-instructions'>
+                    {% trans "Personal information" %}
+                </div>
+                <hr>
+                <!-- /section header: Personal info -->
+
+                <!-- first_name -->
+                <div class='user_input_registration row'>
+                    <div class='col-sm-3 user-input-registration-label'>
+                        <span class='form-label-start'>
+                            {% trans "First name" %}:
+                        </span>
+                    </div>
+                    <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                        {{ profile_form.first_name }}
+                    </div>
+                </div>
+                <!-- /first_name -->
+                        
+                <!-- first_name errors -->
+                <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='first_name_errors'>
+                    {% if profile_form.first_name.errors %}
+                        <div class='text-danger mt-2'>
+                            {% for error in profile_form.first_name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- /first_name errors -->
+            
+            
+                <!-- last_name -->
+                <div class='user_input_registration row' id='last_name'>
+                    <div class='col-sm-3 user-input-registration-label'>
+                        <span class='form-label-start'>
+                            {% trans "Last name" %}:
+                        </span>
+                    </div>
+                    <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                        {{ profile_form.last_name }}
+                    </div>
+                </div>
+                <!-- /last_name -->
+
+                <!-- last_name errors -->
+                <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='last_name_errors'>
+                    {% if profile_form.last_name.errors %}
+                        <div class='text-danger mt-2'>
+                            {% for error in profile_form.last_name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- /last_name errors -->
+
+
+                <!-- preferred_language -->
+                <div class='user_input_registration row' id='language'>
+                    <div class='col-sm-3 user-input-registration-label'>
+                        <span class='form-label-start'>
+                            {% trans "Preferred language" %}:
+                        </span>
+                    </div>
+                    <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                        <div class='d-flex align-items-center'>
+                            {{ profile_form.preferred_language }}
+                        </div>
+                    </div>
+                </div>
+                <!-- /preferred_language -->
+
+                <!-- preferred_language errors -->
+                <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='language-errors'>
+                    {% if profile_form.preferred_language.errors %}
+                        <div class='text-danger mt-2'>
+                            {% for error in profile_form.preferred_language.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- /preferred_language errors -->
+
+
+                <!-- email -->
+                <div class='user_input_registration row' id='email'>
+                    <div class='col-sm-3 user-input-registration-label'>
+                        <span class='form-label-start'>
+                            {% trans "Email address" %}:
+                        </span>
+                    </div>
+                    <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                        <span class="form-control border-0">
+                            {{ user.email }}
+                        </span>
+                    </div>
+                </div>
+                <!-- /email -->
+
+                
+                <!-- date_joined -->
+                <div class='user_input_registration row' id='date-joined'>
+                    <div class='col-sm-3 user-input-registration-label'>
+                        <span class='form-label-start'>
+                            {% trans "Registered since" %}:
+                        </span>
+                    </div>
+                    <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                        <!-- Displaying the date_joined in a non-editable form control -->
+                        <span class="form-control border-0">
+                            {{ user.date_joined|date:"d-m-Y" }}
+                        </span> 
+                    </div>
+                </div>
+                <!-- /date_joined -->
+
+                
+                <!-- password -->
+                <div class='user_input_registration row' id='password'>
+                    <div class='col-sm-10 col-md-6 col-lg-4'>
+                        <a href='{% url "aichat_users:password_change" %}' class='btn btn-primary w-100'>
+                            {% trans "Click to change password" %}
+                        </a>
+                    </div>
+                </div>
+                <!-- /password -->
+
+            </div>
+            <!-- /section: personal info -->
+       
+
+            <!-- section: default chat settings -->
+            <div class='container-fluid ps-0 mt-4'>
+                
+                <!-- section header: default chat settings -->
+                <div class='container-fluid container-instructions-start-bold fs-3 fst-italic'>
+                    {% trans "Default settings" %}
+                </div>
+                <hr>
+                <!-- /section header: default chat settings -->
+
+                <!-- chat settings container -->
+                <div class='container p-0 m-0' id='container_chat_settings_profile'>
+                    <div class='fw-bold mb-0' id='sub-heading-chat-settings'>
+                        <span class='fw-bold'>
+                            {% trans "Chat settings" %}
+                        </span>
+                    </div>
+
+                    <!-- data_source -->
+                    <div class='user_input_registration row' id='data-source'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Data source" %}:
+                                <i class='fas fa-question-circle ml-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title="{% trans "<b>Understanding AI data sources</b><hr><b>Uploaded materials only:</b><br>Within a given chat, the large language model (LLM) will have no memory of things discussed in preceding messages; it will only respond using information in the materials uploaded.<br><br><b>Uploaded materials + chat history:</b><br>Within a given chat, the LLM will recall things discussed in preceding messages, in addition to information in the materials uploaded.<br><br><b>Uploaded materials, chat history, and general knowledge:</b><br>Within a given chat, the large language model (LLM) will recall things discussed in preceding messages, in addition to information in the materials uploaded. When the user requests information that is neither in prior messages, nor the uploaded materials, the LLM may also access uncited internet data to answer questions."|safe %}">
+                                </i>
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex flex-column align-items-start'>
+                                {% for radio in profile_form.data_source %}
+                                    <div class="form-check">
+                                        {{ radio.tag }} {{ radio.choice_label }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /data_source -->
+
+                    <!-- data_source errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='data-source-errors'>
+                        {% if profile_form.data_source.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.data_source.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /data_source errors -->
+
+
+                    <!-- response_length -->
+                    <div class='user_input_registration row' id='response_length'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Max response length (sentences)" %}:                           
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='row align-items-start'>
+                                <div class='d-flex col'>
+                                    {{ profile_form.response_length }}
+                                </div>
+                                <div class='container col-auto' name='response-length-value-box' id='response-length-value-box-profile'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /response length -->
+
+                    <!-- response_length errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='response-length-errors'>
+                        {% if profile_form.response_length.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.response_length.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /response_length errors -->
+
+
+                    <!-- chat history window -->
+                    <div class='user_input_registration row' id='chat-history-window-div'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Chat history used (messages)" %}:
+                                    <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title="{% blocktrans %}<b>Understanding 'chat window'</b><hr>'Chat window' controls how many rounds of previous user question and LLM answers are used as context for the current LLM answer.<br><br>A larger chat history window will result in improved recollection of information previously discussed in the chat, at the expense of the LLM's ability to extract facts from the documents connected to the LLM.<br><br>Conversely, a smaller chat history window usually results in improved ability to extract facts from the documents connected to the LLM, at the expense of reduced recollection of information previously shared by the user in the chat.{% endblocktrans %}">
+                                    </i>                                
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='row align-items-start'>
+                                <div class='d-flex col'>
+                                    {{ profile_form.chat_history_window }}
+                                </div>
+                                <div class='container col-auto' name='chat-history-window-value-box' id='chat-history-window-value-box-profile'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /chat history window -->
+
+                    <!-- chat history window errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='chat-history-window-errors'>
+                        {% if profile_form.chat_history_window.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.chat_history_window.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /chat history window errors -->
+
+
+                    <!-- temperature -->
+                    <div class='user_input_registration row' id='temperature'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Response creativity (temperature)" %}:
+                                <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                    title="{% trans "<b>Understanding model temperature</b><hr>A LLM's temperature setting is a number between 0 and 1 that determines the model's ability to 'interpret' user input and construct responses based on that assumed user intent.<br><br>A lower temperature will result in reduced ability to interpret a user question, but also lowers the chance of an incorrect response from the model (aka. a 'hillucination').<br><br>Conversely, a higher temperature will result in increased ability to interpret user input, but will increase the likelyhood of hillucination.<br><br>The default temperature for AI chat bots, such as ChatGTP, is 0.7, while default temperature for information retrieval applications is usually close to 0." %}">
+                                </i>  
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='row align-items-start'>
+                                <div class='d-flex col'>
+                                    {{ profile_form.temperature }}
+                                </div>
+                                <div class='container col-auto' name='response-temperature-value-box' id='response-temperature-value-box-profile'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /temperature -->
+
+                    <!-- temperature errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='temperature-errors'>
+                        {% if profile_form.temperature.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.temperature.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /temperature errors -->
+
+
+                </div>
+                <!-- /chat settings container -->
+                
+                <!-- expert recomendation settings container -->
+                <div class='container p-0 m-0' id='container_recommend_experts_profile'>
+                    
+                    <div class='fw-bold mt-4 mb-2' id='sub-heading-expert-recommendation-settings'>
+                        <span class='fw-bold mb-2'>
+                            {% trans "Expert recommendation settings" %}
+                            <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title='<b>{% trans "Understanding recommendation weights" %}</b><hr>{% trans "The numbers below are relative to one another and allow the user to tilt expert recommendations toward the variables deemed most important." %}'>    
+                            </i> 
+                        </span>
+                    </div>
+
+
+                    <!-- suggest experts -->
+                    <div class='user_input_registration row' id='suggest_experts'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Suggest experts" %}?
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='form-check form-switch d-flex align-items-center'>
+                                {{ profile_form.suggest_experts }}
+                                <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title="{% trans 'Suggests experts with work experience related to the user question' %}">
+                                </i>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /suggest_experts -->
+
+                    <!-- suggest_experts errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='suggest-experts-errors'>
+                        {% if profile_form.suggest_experts.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.suggest_experts.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /suggest_experts errors -->
+
+
+                    <!-- div to hold number of experts, experts who speak my language, and sliders -->
+                    <div id="expert-suggestion-configs">
+
+                    
+                        <!-- experts_suggested_number -->
+                        <div class='user_input_registration row' id='experts_suggested_number'>
+                            <div class='col-sm-3 user-input-registration-label'>
+                                <span class='form-label-start'>
+                                    {% trans "Experts suggested" %}:
+                                </span>
+                            </div>
+                            <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                                <div class='row align-items-start'>
+                                    <div class='d-flex col'>
+                                        {{ profile_form.experts_suggested_number }}
+                                    </div>
+                                    <div class='container col-auto' name='number-of-experts-value-box' id='number-of-experts-profile-value-box'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /experts_suggested_number -->
+
+                        <!-- experts_suggested_number errors -->
+                        <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='experts-suggested-number-errors'>
+                            {% if profile_form.experts_suggested_number.errors %}
+                                <div class='text-danger mt-2'>
+                                    {% for error in profile_form.experts_suggested_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!-- /experts_suggested_number errors -->
+
+
+                        <!-- expert_speaks_my_lang -->
+                        <div class='user_input_registration row' id='expert_speaks_my_lang'>
+                            <div class='col-sm-3 user-input-registration-label'>
+                                <span class='form-label-start'>
+                                    {% trans "Only suggest experts who speak" %} {{ current_language_translated }}
+                                </span>
+                            </div>
+                            <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                                <div class='d-flex align-items-center'>
+                                    {{ profile_form.expert_speaks_my_lang }}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /expert_speaks_my_lang -->
+
+                        <!-- expert_speaks_my_lang errors -->
+                        <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='expert_speaks_my_lang-errors'>
+                            {% if profile_form.expert_speaks_my_lang.errors %}
+                                <div class='text-danger mt-2'>
+                                    {% for error in profile_form.expert_speaks_my_lang.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!-- /expert_speaks_my_lang errors -->
+
+                        <!-- recommendation weights header --> 
+                        <div class='fw-bold mt-4 mb-2' id='sub-heading-recommendation-weights-settings'>
+                            <span class='fw-bold mb-2'>
+                                {% trans "Recommendation weights" %}
+                                <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title='<b>{% trans "Understanding recommendation weights" %}</b><hr>{% trans "The numbers below are relative to one another and allow the user to tilt expert recommendations toward the variables deemed most important." %}'>    
+                                </i> 
+                            </span>
+                        </div>
+                        <!-- /recommendation weights header --> 
+
+                        <!-- weight_years -->
+                        <div class='user_input_registration row' id='years-experience'>
+                            <div class='col-sm-3 user-input-registration-label'>
+                                <span class='form-label-start'>
+                                    {% trans "Years of experience" %}:
+                                </span>
+                            </div>
+                            <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                                <div class='row align-items-start'>
+                                    <div class='d-flex col' name="expert-recommendation-slider">
+                                        {{ profile_form.weight_years }}
+                                    </div>
+                                    <div class='container col-auto' name='recommendation-weight-years-value-box' id='recommendation-weight-years-value-box-profile'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /weight_years -->
+
+                        <!-- weight_years errors -->
+                        <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='weight-years-errors'>
+                            {% if profile_form.weight_years.errors %}
+                                <div class='text-danger mt-2'>
+                                    {% for error in profile_form.weight_years.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!-- /weight_years errors -->
+
+
+                        <!-- weight_industry -->
+                        <div class='user_input_registration row' id='industry'>
+                            <div class='col-sm-3 user-input-registration-label'>
+                                <span class='form-label-start'>
+                                    {% trans "Industry" %}:
+                                </span>
+                            </div>
+                            <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                                <div class='row align-items-start'>
+                                    <div class='d-flex col' name="expert-recommendation-slider">
+                                        {{ profile_form.weight_industry }}
+                                    </div>
+                                    <div class='container col-auto' name='recommendation-weight-industry-value-box' id='recommendation-weight-industry-value-box-profile'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /weight_industry -->
+
+                        <!-- weight_industry errors -->
+                        <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='weight-industry-errors'>
+                            {% if profile_form.weight_industry.errors %}
+                                <div class='text-danger mt-2'>
+                                    {% for error in profile_form.weight_industry.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!-- /weight_industry errors -->
+
+
+                        <!-- weight_role -->
+                        <div class='user_input_registration row' id='role'>
+                            <div class='col-sm-3 user-input-registration-label'>
+                                <span class='form-label-start'>
+                                    {% trans "Job titles" %}:
+                                </span>
+                            </div>
+                            <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                                <div class='row align-items-start'>
+                                    <div class='d-flex col' name="expert-recommendation-slider">
+                                        {{ profile_form.weight_role }}
+                                    </div>
+                                    <div class='container col-auto' name='recommendation-weight-role-value-box' id='recommendation-weight-role-value-box-profile'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /weight_role -->
+
+                        <!-- weight_role errors -->
+                        <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='weight-role-errors'>
+                            {% if profile_form.weight_role.errors %}
+                                <div class='text-danger mt-2'>
+                                    {% for error in profile_form.weight_role.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!-- /weight_role errors -->
+
+
+                        <!-- weight_topic -->
+                        <div class='user_input_registration row' id='topic'>
+                            <div class='col-sm-3 user-input-registration-label'>
+                                <span class='form-label-start'>
+                                    {% trans "Topic of discussion" %}:
+                                </span>
+                            </div>
+                            <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                                <div class='row align-items-start'>
+                                    <div class='d-flex col' name="expert-recommendation-slider">
+                                        {{ profile_form.weight_topic }}
+                                    </div>
+                                    <div class='container col-auto' name='recommendation-weight-topic-value-box' id='recommendation-weight-topic-value-box-profile'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /weight_topic -->
+
+                        <!-- weight_topic errors -->
+                        <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='weight-topic-errors'>
+                            {% if profile_form.weight_topic.errors %}
+                                <div class='text-danger mt-2'>
+                                    {% for error in profile_form.weight_topic.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!-- /weight_topic errors -->
+
+
+                        <!-- weight_geography -->
+                        <div class='user_input_registration row' id='geography'>
+                            <div class='col-sm-3 user-input-registration-label'>
+                                <span class='form-label-start'>
+                                    {% trans "Geography" %}:
+                                </span>
+                            </div>
+                            <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                                <div class='row align-items-start'>
+                                    <div class='d-flex col' name="expert-recommendation-slider">
+                                        {{ profile_form.weight_geography }}
+                                    </div>
+                                    <div class='container col-auto' name='recommendation-weight-geography-value-box' id='recommendation-weight-geography-value-box-profile'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /weight_geography -->
+
+                        <!-- weight_geography errors -->
+                        <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='weight-geography-errors'>
+                            {% if profile_form.weight_geography.errors %}
+                                <div class='text-danger mt-2'>
+                                    {% for error in profile_form.weight_geography.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!-- /weight_geography errors -->
+
+                    <!-- /div to hold number of experts, experts who speak my language, and sliders -->
+                    </div>
+
+                <!-- /expert recomendation settings container -->
+                </div>
+                        
+
+                <!-- advanced settings container -->
+                <div class='container p-0 m-0' id='container_chat_settings_profile'>
+                    
+                    <!-- advanced settings header -->
+                    <div class='fw-bold mt-4 mb-2' id='sub-heading-advanced-settings'>
+                        <span class='fw-bold mb-2'>
+                            {% trans "Advanced settings" %}
+                        </span>
+                    </div>
+                    <!-- /advanced settings header -->
+                    
+                    <!-- data upload and vectorization -->
+                    <div class='fw-bold mt-4 mb-2' id='sub-heading-data-processing'>
+                        <span class='fw-bold mb-2'>
+                            {% trans "Data upload and vectorization" %}:
+                        </span>
+                    </div>
+                    <!--  data upload and vectorization -->
+
+
+                    <!-- rag_sources_shown -->
+                    <div class='user_input_registration row' id='rag-sources-shown'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Data types shown" %}:
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex flex-column align-items-start'>
+                                {% for radio in profile_form.rag_sources_shown %}
+                                    <div class="form-check">
+                                        {{ radio.tag }} {{ radio.choice_label }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /rag_sources_shown -->
+
+                    <!-- rag_sources_shown errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='rag-sources-shown-errors'>
+                        {% if profile_form.rag_sources_shown.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.rag_sources_shown.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /rag_sources_shown errors -->
+
+                    <!-- rag_sources_used -->
+                    <div class='user_input_registration row' id='rag-sources-used'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Uploaded materials used" %}:
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex flex-column align-items-start'>
+                                {% for radio in profile_form.rag_sources_used %}
+                                    <div class="form-check">
+                                        {{ radio.tag }} {{ radio.choice_label }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /rag_sources_used -->
+
+                    <!-- rag_sources_used errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='rag-sources-used-errors'>
+                        {% if profile_form.rag_sources_used.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.rag_sources_used.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /rag_sources_used errors -->
+
+
+                    <!-- preprocessing
+                    <div class='user_input_registration row' id='preprocessing-div'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Preprocess data" %}?
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='form-check form-switch d-flex align-items-center' id='preprocessing'>
+                                {{ profile_form.preprocessing }}
+                                <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title="{% trans 'Preprocess data prior to vectorization' %}">
+                                </i>
+                            </div>
+                        </div>
+                    </div>
+                    /preprocessing -->
+
+
+                    <!-- preprocessing_model
+                    <div class='user_input_registration row mb-1' id='preprocessing-model-div'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Preprocessing model" %}:
+                            </span>
+                            <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                title="{% trans "<b>Understanding preprocessing model</b><hr>Preprocessing prepares text for ingestion by a Large Language Model (LLM) in several ways, including:<br><ol><br><li><strong>Lemmatization: </strong>The conversion of words into their base or root form (lemma), improving the LLM's ability to assocaite words with one another. For example, the words 'walks', 'walking', or 'walked' would all be converted into the base form of 'walk'.</li><br><li><strong>Removal of stop words: </strong>Removes words that do not contribute meaning to the text, such as 'the', 'is', and 'in'. This improves the LLM's ability to assess the fundamental meaning of the text.</li></ol><br><br>" %}">
+                            </i>                            
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex flex-column align-items-start' id='preprocessing-model'>
+                                {{ profile_form.preprocessing_model }}
+                            </div>
+                        </div>
+                    </div>
+                    /preprocessing_model -->
+
+                    <!-- preprocessing_model errors
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='preprocessing-model-errors'>
+                        {% if profile_form.preprocessing_model.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.preprocessing_model.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    /preprocessing_model errors -->
+
+                    <!-- preprocessing_model additional info
+                    <div class='user_input_registration row' id='preprocessing-model-additional-info'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex align-items-start form-label-small'>
+                                <a id="preprocessing-model-additional-info-link" href="#" target="_blank">
+                                    {% trans "Click here to learn about this model" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    preprocessing_model additional info -->
+
+
+                    <!-- tokenization_and_vectorization_model -->
+                    <div class='user_input_registration row mb-1' id='tokenization-and-vectorization-model'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Vectorization model" %}:
+                            </span>
+                            <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                title="{% trans "<b>Understanding vectorization model</b><hr>Vectorization is the process in which each token (typically a word) in a body of text is assessed for its similarity to all the other tokens in a body of text. That similarity is expressed via a vector with many dimensions (typically > 240).<br><br><strong>A vectorization analogy: </strong>The position of a given token within vectorspace is similar to a marble floating inside a transparent basketball. If we strategically position the marble inside the basketball relative to its similarity to the other marbles in the same basketball (according to the dimensions of color, size, etc), we can then describe that marble's location within the basketball via coordinates. Marbles that are, on balance, more similar to others, would be nearby one another within the basketball." %}">
+                            </i>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex flex-column align-items-start' id='vectorization-model'>
+                                {{ profile_form.tokenization_and_vectorization_model }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /tokenization_and_vectorization_model -->
+
+                    <!-- tokenization_and_vectorization_model errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='tokenization-and-vectoriation-model-errors'>
+                        {% if profile_form.tokenization_and_vectorization_model.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.tokenization_and_vectorization_model.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /tokenization_and_vectorization_model errors -->
+
+                    <!-- tokenization_and_vectorization_model additional info -->
+                    <div class='user_input_registration row' id='tokenization-and-vectoriation-model-additional-info'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                           <!-- spacer used for link below -->
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex align-items-start form-label-small'>
+                                <a id="tokenization-and-vectoriation-model-additional-info-link" href="#" target="_blank">
+                                    {% trans "Click here to learn about this model" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- tokenization_and_vectorization_model additional info -->
+
+
+                    <!-- similarity_metric -->
+                    <div class='user_input_registration row' id='similarity-metric-div'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Index similarity metric" %}:
+                            </span>
+                            <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                title="{% trans "<b>Understanding similarity metric</b><hr>The similarity metric is the means by which a LLM measures the closeness (e.g. the similarity) between two vectorized tokens within a given vectorspace. This setting is used in setting up the user's vector database, optimizing it for the similarity metric employed by the user's chosen vectorization model.<br><br>The recommended similarity metric reflects the similarity metric associated with the user's currently-selected vectorization model." %}">
+                            </i>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex flex-column align-items-start' id='similarity-metric'>
+                                {{ profile_form.similarity_metric }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /similarity_metric -->
+
+                    <!-- similarity_metric errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='similarity-metric-errors'>
+                        {% if profile_form.similarity_metric.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.similarity_metric.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /similarity_metric errors -->
+
+                    <!-- similarity_metric additional info -->
+                    <div class='user_input_registration row' id='similarity-metric-additional-info'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                           <!-- spacer used for link below -->
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex align-items-start form-label-small'>
+                                <span class='me-1'>{% trans "Recommendation based on vectorization model"%}: </span><span id='similarity-metric-additional-info-recommendation'></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- similarity_metric additional info -->
+
+                    
+                    <!-- retriever_model -->
+                    <div class='user_input_registration row mb-1' id='retriever-model'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Retriever model" %}:
+                            </span>
+                            <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                title="{% trans "<b>Understanding retriever model</b><hr>Retrievers are the models that take the user’s vectorized input and compares it to the vectorized source documents to find the most helpful information and assemble that information into a coherent response to the user’s question.<br><br>The models listed vary considerably in their speed and capabilities. Users should click the link provided to learn about a model before selecting it for use." %}">
+                            </i>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex flex-column align-items-start'>
+                                {{ profile_form.retriever_model }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /retriever_model -->
+
+                    <!-- retriever_model errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='retriever-model-errors'>
+                        {% if profile_form.retriever_model.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.retriever_model.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /retriever_model errors -->
+
+                    <!-- retriever_model additional info -->
+                    <div class='user_input_registration row' id='retriever-model-additional-info'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                           <!-- spacer used for link below -->
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='d-flex align-items-start form-label-small'>
+                                <a id="retriever-model-additional-info-link" href="#" target="_blank">
+                                    {% trans "Click here to learn about this model" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- retriever_model additional info -->
+
+
+
+
+                    <!-- advanced settings -> data processing sub-header -->
+                    <div class='fw-bold mt-4 mb-2' id='sub-heading-data-processing'>
+                        <span class='fw-bold mb-2'>
+                            {% trans "Data processing settings" %}:
+                        </span>
+                    </div>
+                    <!-- /advanced settings -> data processing sub-header -->
+
+                    
+                    <!-- chunk_size -->
+                    <div class='user_input_registration row' id='chunk-size'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Chunk size" %}:
+                                <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title="{% trans "<b>Understanding chunk size</b><hr>When a large language model (LLM) processes user materials, it breaks those materials down into smaller pieces called 'chunks' in order to more effectively and more efficiently extract information and meaning. <b>Chunk size</b> represents the size, in characters, of those chunks.<br><br>Shrinking chunk size increases the specificity of answers provided by the LLM, also decreases LLM ability to understand the overall context and meaning of the materials and slows response speed.<br><br>Conversely, increasing chunk sizes increases LLM ability to understand the overall context and meaning of materials and will increase response speed, but responses will be less specific.<br><br>The default chunk size for many AI chat applications is approximately 1,000 characters." %}">
+                                </i>                            
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='row align-items-start'>
+                                <div class='d-flex col'>
+                                    {{ profile_form.chunk_size }}
+                                </div>
+                                <div class='container col-auto' name='chunk-size-value-box' id='chunk-size-value-box-profile'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /chunk_size -->
+
+                    <!-- chunk_size errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='chunk-size-errors'>
+                        {% if profile_form.chunk_size.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.chunk_size.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /chunk_size errors -->
+
+
+                    <!-- chunk_overlap -->
+                    <div class='user_input_registration row' id='chunk-overlap'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Chunk overlap (% of chunk size)" %}:
+                                <i class="fas fa-question-circle ml-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" 
+                                title="{% trans "<b>Understanding chunk overlap</b><hr>When a large language model (LLM) processes user materials, it breaks those materials down into smaller pieces called &quot;chunks&quot; in order to more effectively and more efficiently extract information from those materials. &quot;Chunk overlap&quot; is a percentage indicating how much of each chunk overlaps with the preceding and following chunks.<br><br>Reducing overlap will reduce processing time, but may result in decreased ability of the LLM to extract the context and overall meaning of a document.<br><br>Increasing overlap improves LLM ability to understand context and meaning, but will reduce processing speed.<br><br>The default overlap for many AI chat applications is approximately 10%." %}">
+                                </i>
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='row align-items-start'>
+                                <div class='d-flex col'>
+                                    {{ profile_form.chunk_overlap }}
+                                </div>
+                                <div class='container col-auto' name='chunk-overlap-value-box' id='chunk-overlap-value-box-profile'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /chunk_overlap -->
+
+                    <!-- chunk_overlap errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='chunk-overlap-errors'>
+                        {% if profile_form.chunk_overlap.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.chunk_overlap.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /chunk_overlap errors -->
+
+                    <!-- langchain k -->
+                    <div class='user_input_registration row' id='langchain-k'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "Chunks to be used from data source (LangChain 'k')" %}:
+                                <i class="fas fa-question-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" 
+                                title="{% trans "<b>Understanding LangChain's 'k' in the context of data sourcing</b><hr>LangChain's 'k' value specifies how many chunks of source data will be used in formulating the model's response.<br><br>A higher value for 'k' will typically result in broader answers but are more likely to include irrelevant data.<br><br>Conversely, a lower 'k' value will typically generate more specific answers, but may fail to extract context effectively and/or increase the chances of a non-answer.<br><br>The default value for LangChain's 'k' is 5.<br><br>Important note: LangChain's 'k' value deals with <strong>source data only</strong> and not the linguistic properties of the model's <strong>response</strong> and thus, should not be confused with the concept of 'top k' which is a configuration that helps determine the way the model composes its response." %}">
+                                </i>                                        
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='row align-items-start'>
+                                <div class='d-flex col'>
+                                    {{ profile_form.langchain_k }}
+                                </div>
+                                <div class='container col-auto' name='langchain-k-value-box' id='langchain-k-value-box-profile'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /langchain-k -->
+
+                    <!-- langchain-k errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='langchain-k-errors'>
+                        {% if profile_form.langchain_k.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.langchain_k.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /langchain-k errors -->
+
+
+                    <!-- advanced settings -> response formation sub-header -->
+                    <div class='fw-bold mt-4 mb-2' id='sub-heading-response-formation'>
+                        <span class='fw-bold mb-2'>
+                            {% trans "Response formation settings" %}:
+                        </span>
+                    </div>
+                    <!-- /advanced settings -> response formation sub-header -->
+
+
+                    <!-- top p -->
+                    <div class='user_input_registration row' id='top-p'>
+                        <div class='col-sm-3 user-input-registration-label'>
+                            <span class='form-label-start'>
+                                {% trans "top_p" %}:
+                                <i class="fas fa-question-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" 
+                                title="{% trans "<b>Understanding 'top_p'</b><hr>'top_p' controls the variation in diction in a Large Language Model ('LLM') response.<br><br>For example:<br><br>Assume the most recent word in the LLM's response was 'apple' and top_p = 0.90. To generate the next word in the response, the model will find the word that most frequently follows 'apple', add it to a list of options, then repeat the process, each time selecting the next most likely word, until such time that the cumulative probability of those words following 'apple' is >= 90%. At that time, the model will randomly choose from the words on that list and then repeat the process to generate the next word in the response.<br><br>A high value for 'top_p' will result in a response with more varied diction, whereas a low value for 'top_p' will result in more consistent word choice.<br><br>The default top_p for OpenAI chat models is 1.0" %}">
+                                </i>                                      
+                            </span>
+                        </div>
+                        <div class='col-11 col-sm-8 col-md-6 col-lg-4'>
+                            <div class='row align-items-start'>
+                                <div class='d-flex col'>
+                                    {{ profile_form.top_p }}
+                                </div>
+                                <div class='container col-auto' name='top-p-value-box' id='top-p-value-box-profile'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /top_p -->
+
+                    <!-- top_p errors -->
+                    <div class='col-sm-12 col-lg-6 d-flex align-items-center' id='top-p-errors'>
+                        {% if profile_form.top_p.errors %}
+                            <div class='text-danger mt-2'>
+                                {% for error in profile_form.top_p.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- /top_p errors -->                   
+
+                </div>
+                <!-- /advanced settings container -->
+
+            </div>
+            <!-- section default chat settings -->
+
+            
+        </form>
+        <!-- /ProfileForm -->
+
+
+        <!-- section: RAG materials -->
+        <div class='container-fluid ps-0 mb-4 mt-4'>
+            
+            <!-- section header: RAG materials -->
+            <div class='container-fluid container-instructions-start-bold fs-3 fst-italic'>
+                {% trans "Chat materials" %}
+            </div>
+            <hr>
+            <!-- /section header: RAG materials -->
+
+            <!-- web materials container -->
+            <div class='container p-0 m-0' id='web-materials-container'>
+                
+                <!-- web materials header -->
+                <div class='fw-bold mb-2' id='web-materials-header'>
+                    <span class='fw-bold'>
+                        {% trans "Websites" %}
+                    </span>
+                </div>
+                <!-- /web materials sub-header -->
+
+                <!-- card and RagUrlForm -->
+                <div class="card" id='web-materials-card'>
+                    <div class="card-body" id="RagUrlFormCardBody">
+                        <!-- INJECTED CONTENT FROM RAG_URL_FORMSET.HTML -->
+                    </div>
+                </div>
+                <!-- /card and RagUrlForm -->
+            
+            </div>
+            <!-- /web materials container -->
+
+
+            <!-- files container -->
+            <div class='container p-0 m-0' id='files-container'>
+                
+                <!-- files sub-header -->
+                <div class='fw-bold mb-2' id='files-header'>
+                    <span class='fw-bold'>
+                        {% trans "Files" %}
+                    </span>
+                </div>
+                <!-- /web materials sub-header -->
+
+                <!-- card and RagDocForm -->
+                <div class="card" id='docs-card'>
+                    <div class="card-body" id="RagDocsFormCardBody">
+                        <!-- INJECTED CONTENT FROM RAG_DOCS_FORMSET.HTML -->
+                    </div>
+                </div>
+                <!-- /card and RagDocForm -->
+       
+            </div>
+            <!-- /files container -->
+
+            <!-- clear all data sources button -->
+            <button type="button" class="btn btn-danger w-100 mt-3" id='delete-all-rag-materials-btn'>
+                {% trans "Delete all data sources" %}
+            </button>
+            <!-- /clear all data sources button -->
+
+        </div>
+        <!-- /section: RAG materials -->
+
+    </div>
+{% endblock %}

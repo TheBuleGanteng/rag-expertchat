@@ -1,0 +1,78 @@
+{% load static %}
+{% load i18n %}
+{% load aichat_chat_filters %}
+
+<!-- this page contains html that is injected into index.html via submitforms.js. This removes the need to manage multiple forms (e.g RagUrlFormSet, RagDocForm, and input_form) via aicaht_chat/index_view-->
+
+<!-- RagDocForm -->
+<form id="RagDocForm" method="POST" enctype="multipart/form-data" action="{% url 'aichat_chat:rag_docs' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div id="file-upload-and-instructions-area" class="cursor-pointer text-center">
+        
+        <!-- existing files, if any -->
+        <div id='file-upload-area' class='border rounded upload-box-height'>
+            <ul class='file-list' id='file-list' data-existing-files='{{ documents|length }}'>
+                {% if documents %}
+                    {% for document in documents %}
+                    <li class='file-item'>
+                            {% if document.file_path %}
+                                <a href="{{ MEDIA_URL }}aichat_chat/user_uploads/{{ user.id }}/{{ document.source }}" target="_blank" class='file-name'>
+                                    {{ document.file_path.name|filename_filter }}
+                                </a>
+                                <span class='file-size'>
+                                     {{ document.file_size|floatformat:1}} MB
+                                </span>
+                                <i class='bi bi-x-circle-fill remove-icon' name='remove-file-icon'>
+                                </i>
+                                <!-- hidden input for each existing document to ensure that existing docs populated by the view are included in form submission -->
+                                <input type="hidden" name="existing_files" value="{{ document.source }}">
+                                <!-- /hidden input for each existing document to ensure that existing docs populated by the view are included in form submission -->
+                            {% else %}
+                                <span>
+                                    {% trans "No file uploaded" %}
+                                </span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+        <!-- /existing files, if any -->
+    
+        <!-- upload instructions -->
+        <div id='RagDocForm-instructions-div' class='text-center'>
+            <i class="bi bi-cloud-arrow-up-fill text-primary fs-1"></i>
+            <p class="mt-3" id='file-upload-instructions'>{% trans "Drag and drop your image here or click to select file(s) for use with the chat." %}</p>
+            <small><a href="#" id="select-directory-link" class="sm ">{% trans "Click here to select an entire folder or directory for upload" %}</a></small>
+        </div>
+        <!-- upload instructions -->
+
+    </div>
+        
+                                                                    
+    
+    <input type="file" id="fileElem" name='file_path' multiple style="display: none;">
+    <input type="file" id="directoryElem" name='file_path' webkitdirectory directory style="display: none;">  
+    
+    
+    <!-- skip and submit buttons -->
+    <div id='RagDocFormButtonsDiv'>
+
+        <!-- do not use files button -->
+        <button type='button' class="btn btn-secondary btn-sm btn-xsm w-100" id='dont-use-docs-button'>
+            {% trans "Do not use files" %}
+        </button>
+        <!-- /do not use files button -->
+
+        <!-- upload files button -->
+        <button class="btn btn-primary mt-1 w-100" type="submit" id='docs-save-button' disabled>
+            {% trans "Save" %}
+        </button>
+        <!-- /upload files button -->
+
+    </div>                                 
+    <!-- /skip and submit buttons -->
+
+</form>
+<!-- /RagDocForm -->
