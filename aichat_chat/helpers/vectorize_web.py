@@ -143,6 +143,8 @@ def vectorize_web(
                 preprocessing_model_key = select_preprocessing_model(language_code=language)
                 preprocessing_model_loaded = spacy.load(preprocessing_model_key)
             else:
+                language = None
+                preprocessing_model_key = None
                 preprocessing_model_loaded = spacy.load(preprocessing_model)
                 
             logger.info(f'running vectorize_web() ... '
@@ -197,12 +199,12 @@ def vectorize_web(
             vector_id=vector_id,
             defaults={
                 'source': metadata['source'],
-                'top_level_domain': top_level_domain,
-                'date_accessed': date_accessed,
+                'top_level_domain': website_split.metadata.get('top_level_domain', ''),
+                'date_accessed': website_split.metadata.get('date_accessed', ''),
                 'type': type,
                 'embedding': embedding,
                 'user': user,
-                'language': language,
+                'language': website_split.metadata.get('language', None),
                 'text': website_split.metadata['text'],
 
             }

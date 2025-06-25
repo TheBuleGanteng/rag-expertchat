@@ -16,6 +16,9 @@ import torch
 import torch.nn.functional as F
 from translations.helpers.translate import translate
 
+from langchain_core.embeddings import Embeddings
+from typing import List
+
 
 
 logger = logging.getLogger('django')
@@ -27,35 +30,47 @@ __all__ = ['CustomEmbeddings', 'Document', 'Website', 'connect_to_pinecone', 'cr
 
 
 # Defines a custom wrapper similar to HuggingFaceEmbeddings, but allows for use of both sentence-transformer and BERT models
-class CustomEmbeddings():
+# Correct fixes for your CustomEmbeddings class
+
+class CustomEmbeddings(Embeddings):  # Now inherits from Embeddings
     def __init__(self, user):
+        super().__init__()  # Call parent constructor
         self.user = user
         tokenization_and_vectorization_model = user.aichat_userprofile.tokenization_and_vectorization_model
         logger.info(f"running CustomEmbeddings ... tokenization_and_vectorization_model is: { tokenization_and_vectorization_model }")
         
         if tokenization_and_vectorization_model in ['gpt-4o', 'gpt-4o-mini']:
-            # Initialize OpenAIEmbeddings for the specified models
-            self.embeddings = OpenAIEmbeddings(
-                model="text-embedding-ada-002",  # Use embedding model for vectorization
-                openai_api_key=OPENAI_API_KEY
-            )
+            # Fix 1: Handle the SecretStr issue by checking if OPENAI_API_KEY is not None
+            if OPENAI_API_KEY:
+                self.embeddings = OpenAIEmbeddings(
+                    model="text-embedding-ada-002",
+                    api_key=OPENAI_API_KEY
+                )
+            else:
+                # Let OpenAIEmbeddings use environment variable automatically
+                self.embeddings = OpenAIEmbeddings(
+                    model="text-embedding-ada-002"
+                )
             self.use_openai = True
         else:
             self.embeddings = OpenSourceEmbeddings(tokenization_and_vectorization_model)
             self.use_openai = False
 
-    def embed_documents(self, sources):
-        logger.debug(f'running CustomEmbeddings ... embedding sources: {sources}')
-        return self.embeddings.embed_documents(sources)
+    # Fix 2: Match the parameter names from the base class
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Embed search docs - parameter name matches base class"""
+        logger.debug(f'running CustomEmbeddings ... embedding texts: {texts}')
+        return self.embeddings.embed_documents(texts)
         
-
-    def embed_query(self, query):
-        logger.debug(f'running CustomEmbeddings ... embedding query: {query}')
-        return self.embeddings.embed_query(query)
+    # Fix 3: Match the parameter names from the base class
+    def embed_query(self, text: str) -> List[float]:
+        """Embed query text - parameter name matches base class"""
+        logger.debug(f'running CustomEmbeddings ... embedding text: {text}')
+        return self.embeddings.embed_query(text)
     
-    def __call__(self, query):
+    def __call__(self, text: str) -> List[float]:
         # This makes the object callable like a function
-        return self.embed_query(query)
+        return self.embed_query(text)
 
 
 
@@ -104,17 +119,22 @@ class Website:
 
 
 # Function 1: Calculate similarity between two text chunks (used for citation generation)
+# Fix the calculate_similarities function (around line 103)
+
 def calculate_similarities(retrieved_chunks, answer_text, user):
     source_data_chunks = [chunk.page_content for chunk in retrieved_chunks]
     
     # Initialize model and tokenizer
     tokenization_and_vectorization_model = user.aichat_userprofile.tokenization_and_vectorization_model
 
-
     # Get embeddings based on model type
     if tokenization_and_vectorization_model in ['gpt-4o', 'gpt-4o-mini']:
-        # Use OpenAI embeddings
-        embeddings_generator = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+        # Fix: Remove the openai_api_key parameter entirely or handle None case
+        if OPENAI_API_KEY:
+            embeddings_generator = OpenAIEmbeddings(api_key=OPENAI_API_KEY)
+        else:
+            # Let it use environment variable automatically
+            embeddings_generator = OpenAIEmbeddings()
         
         # Get embeddings
         embedding_answer = torch.tensor(embeddings_generator.embed_query(answer_text)).unsqueeze(0)
@@ -609,9 +629,12 @@ def return_sources(detected_language, deduplicated_sources):
     if detected_language == 'en':
         sources_string_formatted = 'Sources:'
     else:
-        sources_string_formatted = translate(input_text='Sources:', from_language='en', to_language=detected_language)
+        translated_result = translate(input_text='Sources:', from_language='en', to_language=detected_language)
+        # Ensure we get a string from the translate function
+        sources_string_formatted = str(translated_result) if translated_result is not None else 'Sources:'
+    
     for source in deduplicated_sources[source_cutoff:]:
-        sources_string_formatted += f'{source}\n'
+        sources_string_formatted += f'{str(source)}\n'
     return sources_string_formatted
 
 

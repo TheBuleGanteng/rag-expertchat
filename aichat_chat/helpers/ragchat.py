@@ -22,7 +22,8 @@ from translations.helpers.translate import detect_language, translate
 from .models_supported import retriever_models_supported
 import pinecone
 from .vectorize_helpers import CustomEmbeddings, calculate_similarities, generate_system_prompt
-from langchain_community.vectorstores import Pinecone
+from langchain_pinecone import PineconeVectorStore
+from pinecone import Pinecone as PineconeClient
 
 
 logger = logging.getLogger('django')
@@ -30,17 +31,14 @@ logger = logging.getLogger('django')
 __all__ = ['set_up_retriever', 'stream_response_to_user']
 
 # Ensure that environment variables are set
-LANGCHAIN_API_KEY = os.getenv('LANGCHAIN_API_KEY')
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
-AICHAT_LANGCHAIN_PROJECT = os.getenv('AICHAT_LANGCHAIN_PROJECT')
+required_env_vars = ['LANGCHAIN_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'AICHAT_LANGCHAIN_PROJECT']
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
+# Set the LangChain-specific environment variables
 os.environ['LANGCHAIN_TRACING_V2'] = 'true'
 os.environ['LANGCHAIN_ENDPOINT'] = 'https://api.smith.langchain.com'
-os.environ['AICHAT_LANGCHAIN_PROJECT'] = AICHAT_LANGCHAIN_PROJECT
-os.environ['LANGCHAIN_API_KEY'] = LANGCHAIN_API_KEY
-os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
-os.environ['ANTHROPIC_API_KEY'] = ANTHROPIC_API_KEY
 
    
 
@@ -90,6 +88,7 @@ def get_session_history(user_id: str, conversation_id: str, chat_history_window_
 
 
 # Declare retriever as a global variable
+# Declare retriever as a global variable
 retriever = None
 def set_up_retriever(user):
     logger.debug(f'running set_up_retriever() ... function started')
@@ -136,10 +135,19 @@ def set_up_retriever(user):
             embedding_generator = CustomEmbeddings(user=user)
             logger.info(f'running set_up_retriever() ... embedding_generator is: { embedding_generator }')
             
-            vectorstore = Pinecone.from_existing_index(
-                index_name=index_name,
+            # Updated Pinecone syntax - get the Pinecone client and index
+            PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
+            if not PINECONE_API_KEY:
+                raise ValueError("Pinecone API key is not set.")
+            
+            pc = PineconeClient(api_key=PINECONE_API_KEY)
+            pinecone_index = pc.Index(index_name)
+            
+            # Create vectorstore using new syntax
+            vectorstore = PineconeVectorStore(
+                index=pinecone_index,
                 embedding=embedding_generator,
-                namespace=str(user.id)
+                text_key="text"  # This should match your metadata structure
             )
             logger.info(f'running set_up_retriever() ... '
                          f'connected to Pinecone vectorstore: { vectorstore }')

@@ -57,25 +57,24 @@ def regex_phone(user_input, allowed_input_letters_lower, allowed_input_letters_u
 # - forces user input to lowercase
 # - trims input
 class EmailFieldLowerRegexStrict(forms.EmailField):
-    def clean(self, user_input):
-        user_input = super().clean(user_input)  # Perform the standard cleaning and validation first
-        user_input = user_input.lower().strip()
-        if user_input: 
-            regex_strict(user_input, allowed_input_letters_lower, allowed_input_letters_upper, allowed_input_numbers, allowed_input_symbols_strict)
-        return user_input
-
+    def clean(self, value):
+        value = super().clean(value)  # Perform the standard cleaning and validation first
+        value = value.lower().strip()
+        if value: 
+            regex_strict(value, allowed_input_letters_lower, allowed_input_letters_upper, allowed_input_numbers, allowed_input_symbols_strict)
+        return value
 #-----------------------------------------------------------------------------
 
 # CharField: plus
 # - trims input
 # - Strict regex
 class CharFieldRegexStrict(forms.CharField):
-    def clean(self, user_input):
-        user_input = super().clean(user_input)  # Perform the standard cleaning and validation first
-        user_input = user_input.strip()
-        if user_input:
-            regex_strict(user_input, allowed_input_letters_lower, allowed_input_letters_upper, allowed_input_numbers, allowed_input_symbols_strict)
-        return user_input
+    def clean(self, value):
+        value = super().clean(value)  # Perform the standard cleaning and validation first
+        value = value.strip()
+        if value:
+            regex_strict(value, allowed_input_letters_lower, allowed_input_letters_upper, allowed_input_numbers, allowed_input_symbols_strict)
+        return value
 
 #-----------------------------------------------------------------------------
 
@@ -84,12 +83,12 @@ class CharFieldRegexStrict(forms.CharField):
 # - TitleCases input
 # - Strict regex
 class CharFieldTitleCaseRegexStrict(forms.CharField):
-    def clean(self, user_input):
-        user_input = super().clean(user_input)  # Perform the standard cleaning and validation first
-        user_input = user_input.title().strip()
-        if user_input:
-            regex_strict(user_input, allowed_input_letters_lower, allowed_input_letters_upper, allowed_input_numbers, allowed_input_symbols_strict)
-        return user_input
+    def clean(self, value):
+        value = super().clean(value)  # Perform the standard cleaning and validation first
+        value = value.title().strip()
+        if value:
+            regex_strict(value, allowed_input_letters_lower, allowed_input_letters_upper, allowed_input_numbers, allowed_input_symbols_strict)
+        return value
 
 #-----------------------------------------------------------------------------
 
