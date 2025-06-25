@@ -1,0 +1,87 @@
+{% extends 'aichat_users/layout.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "Log In" %}
+{% endblock %}
+
+{% block login %}
+    <div class='text-start pt-2 pb-5 ps-1 pe-1 '>
+            
+        <!-- login form -->
+        <form action='{% url "aichat_users:login" %}' method='post' name='aichat_chat-login-form'>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            
+            <!-- email -->
+            <div class='mb-3'>
+                {{ form.email }}
+            </div>
+            <div class='mb-3'>
+                {% if form.email.errors %}
+                    <div class='errors'>
+                        {% for error in form.email.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <!-- /email -->
+
+            <!-- password -->
+            <div class='mb-3'>
+                {{ form.password }}
+            </div>
+            <div class='mb-3'>
+                {% if form.password.errors %}
+                    <div class='errors'>
+                        {% for error in form.password.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <!-- /password -->
+
+            <!-- language selector -->
+            <select class='select-custom compact p-1 mb-2 x-small' id="language-selector">
+                {% for code, details in supported_languages.items %}
+                <option value="{{ code }}" {% if code == current_language %}selected{% endif %}>
+                    {{ details.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <!-- /language selector -->
+
+            
+            <button type='submit' class='btn btn-primary' id='submit_button'>{% trans "Log In" %}</button>
+        </form>
+        <!-- /login form -->
+
+        <!-- password_reset link -->
+        <div class='mb-3 small'>
+            <a href='{% url "aichat_users:password_reset" %}'>Click here to reset your password</a>
+        </div>
+        <!-- /password_reset link -->
+
+        <!-- register link -->
+        <div class='mb-3 small'>
+            <a href='{% url "aichat_users:register" %}'>Click here to register</a>
+        </div>
+        <!-- /register link -->
+
+    </div>
+{% endblock %}
+
+{% block main %}
+
+
+    
+    <div class="container-fluid bg-slate-grey p-0 d-none d-md-block">
+        <div id="loginBackgroundImage" class="flex-grow-1 position-relative">
+            <img src="{% static 'aichat_users/login_image.jpg' %}" alt="{% trans 'login image' %}" class="w-100 h-100 object-fit-cover">
+        </div>
+    </div>
+
+{% endblock %}

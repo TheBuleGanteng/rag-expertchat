@@ -1,0 +1,24 @@
+{% load i18n %}
+
+<!-- confirmation modal to be shown when 'delete all rag sources' button click, change in preprocessing model, or change in vectorization model -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmationModalLabel">Confirm settings change</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {% trans "Changing this setting requires re-upload of the source documents" %}.
+          <br>
+          {% trans "Click 'confirm' below to proceed" %}.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id='cancelDeleteBtn' data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+          <button type="button" class="btn btn-success" id="confirmDeleteBtn">{% trans "Confirm" %}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /confirmation modal to be shown when 'delete all rag sources' button click, change in preprocessing model, or change in vectorization model -->
+  

@@ -1,0 +1,145 @@
+{% extends 'aichat_users/layout.html' %}
+{% load i18n %}
+
+
+{% block title %}
+    {% trans "Log In" %}
+{% endblock %}
+
+{% block main %}
+        
+    <!-- accordion -->
+    <div class="accordion col mt-2 mb-4 ms-0 me-0 ps-0 pe-0 min d-flex flex-column" id="accordionPanelsStayOpenExample">
+        
+        <!-- accordion item 1 -->
+        <div class="accordion-item" id='accordion-item-one'>
+        
+            <!-- accordion item 1 title -->
+            <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                    {% trans "Data source: Websites" %} 
+                </button>
+            </h2>
+            <!-- /accordion item 1 title -->
+
+
+            <!-- accordion item 1 body -->
+            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
+                
+                <div class="accordion-body" id='accordion-body-item-1'>
+
+                    <!-- rag url card -->
+                    <div class="card mt-3">
+                        <div class="card-body" id="RagUrlFormCardBody">
+                            
+                        </div>
+                    </div>
+                    <!-- /rag url card -->
+                                
+                </div>
+
+            </div>
+            <!-- /accordion item 1 body -->
+
+        </div>
+        <!-- /accordion item 1 -->
+
+
+
+
+
+
+
+
+        
+        
+        <!-- accordion item 2 -->
+        <div class="accordion-item" id='accordion-item-two'>
+            
+            <!-- accordion item 2 title -->
+            <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                <button class="accordion-button collapsed border-top border-dark" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                    {% trans "Data source: Files, folders, and drives" %} 
+                </button>
+            </h2>
+            <!-- /accordion item 2 title -->
+            
+            <!-- accordion item 2 body -->
+            <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingTwo">
+                <div class="accordion-body" id='accordion-body-item-2'>                   
+                    
+                        <!-- file/folder upload card -->
+                        <div class='card upload-card mt-3'>
+                            <div class='card-body upload-card-body' id='RagDocsFormCardBody'>
+           
+                            </div>
+                        </div>
+                        <!-- / file/folder upload card -->
+
+                </div>
+            </div>
+            <!-- /accordion item 2 body -->
+        </div>
+        <!-- /accordion item 2 -->
+            
+        <!-- accordion item 3 -->
+        <div class="accordion-item flex-grow-1 d-flex flex-column" id='accordion-item-three'>
+
+            <!-- accordion item 3 title -->
+            <h2 class="accordion-header" id='accordion-header-three'>
+                <button class="accordion-button collapsed border-top border-dark" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+                    {% trans "Chat" %}
+                </button>
+            </h2>
+            <!-- /accordion item 3 title -->
+        
+            <!-- accordion item 3 body parent -->
+            <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse border-0">
+                
+                
+                    
+                <!-- answerbox -->
+                <div id='feedDiv' data-conversation-id='{{ user_profile.conversation_id }}'>
+                </div>
+                <!-- /answerbox -->
+
+                <!-- InputForm -->
+                <form class='bg-white text-dark border border-4 position-fixed bottom-0 col-9 col-lg-10' id='InputForm' method='POST' action= "{% url 'aichat_chat:stream_response' %}">
+                    {% csrf_token %}
+                    
+                    <h5>{% trans "Ask question" %}</h5>
+                    {{ input_form.non_field_errors }}
+
+                    <!-- body -->
+                    <div class='d-flex align-items-center'>
+                        <div class='flex-grow-1 me-2' id='inputFormBodyDiv'>
+                            {{ input_form.user_input }}
+                            {% if input_form.user_input.errors %}
+                                {% for error in input_form.user_input.errors %}
+                                    <div class="error">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <button type='submit' class='btn btn-primary btn-sm' id='submit_button'>{% trans "Submit"%}</button>
+                    </div>
+                    <!-- /body -->
+
+                    <!-- hidden fields -->
+                    {{ input_form.first_name.as_hidden }}
+                    {{ input_form.timestamp.as_hidden }}
+                    <!-- /hidden fields -->
+
+                </form>
+                <!-- /InputForm -->  
+
+            </div>
+            <!-- accordion item 3 body parent -->
+
+        </div>
+        <!-- /accordion item 3 -->
+
+    </div>
+    <!-- /accordion -->
+
+    
+{% endblock %}

@@ -1,0 +1,641 @@
+{% load static %}
+{% load i18n %}
+{% include 'aichat_users/confirmation_modal.html' %}
+
+<!DOCTYPE html>
+
+<html lang='{{ current_language }}'>
+
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='initial-scale=1, width=device-width'>
+
+    
+    <!-- Boootstrap CSS http://getbootstrap.com/docs/5.1/ and icons https://icons.getbootstrap.com/ -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Bootstrap + Customized CSS -->
+    <link href='{% static "styles.css" %}' rel='stylesheet'>
+    <!-- /Bootstrap + Customized CSS -->
+
+    <!-- Font Awesome CSS -->
+    <link nonce='{{ request.csp_nonce }}' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css' rel='stylesheet'>
+
+    <!-- Boootstrap and Jquery JavaScript -->
+    <script nonce='{{ request.csp_nonce }}' src='https://code.jquery.com/jquery-3.3.1.slim.min.js'></script>
+    <script nonce='{{ request.csp_nonce }}' src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+    <!-- PDF.js CDN for viewing PDF files in-browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js" defer></script>
+    
+    <!-- favicon -->
+    <link href="{% static 'aichat_users/favicon_inex_one.ico' %}" rel="icon">
+
+    
+    <!-- adds CSRF token to each page, removing need to add it to forms -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <title>
+        AiChat{% block title %}{% endblock %}
+    </title>
+</head>
+
+<body data-session-language="{{ current_language }}">
+
+    <!-- overlay and spinner -->
+    <div id="overlay" class="overlay d-none position-fixed w-100 h-100 top-0 start-0 d-flex flex-column justify-content-center align-items-center">
+        <div id="loadingSpinner" class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{% trans "Loading..." %}</span>
+        </div>
+        <div class="mt-3 text-white">
+            {% trans "Loading..." %}
+        </div>
+    </div>
+    <!-- /overlay and spinner -->
+
+    
+    <div class="d-flex flex-grow-1 min-vh-100" id="sidebar-and-body-div">
+        
+            <!-- sidebar -->
+        <div class="d-flex flex-column p-1 bg-light sidebar col-3 col-lg-2 position-sticky top-0 overflow-auto" id='sidebar-div'>
+
+            <!-- corporate logo in sidebar -->
+            <a class='navbar-brand pe-2' href='{% url "aichat_chat:index" %}'>
+                <img src='{% static "aichat_users/logo_inex_one_small.png" %}' alt='profile logo' class='img-fluid'>
+                <span>
+                    AI
+                </span>
+            </a>
+            <!-- /corporate logo in sidebar -->
+
+            <!-- if user is not signed in, display login form in sidebar -->
+            {% if not user.is_authenticated %}
+            {% block login %}
+            {% endblock %}
+            <!-- /if user is not signed in, display login form in sidebar -->
+
+            {% else %}
+
+            
+
+            <!-- checking if current view is index_view or else, sth else -->                
+            {% if route_used == 'index_view' %}
+
+                <!-- if user is signed in and screen is small, show settings button -->
+                <div class='container p-0 m-0 align-items-start mt-4 d-lg-none'>
+                    <button class="btn btn-primary btn-sm me-1 w-100" id='btn-show-settings' type="button">
+                        {% trans "Show settings" %}
+                    </button>
+                </div>
+                <!-- /if user is signed in and screen is small, show settings button -->
+
+
+                <!-- settings, history div that is shown/hidden by button -->
+                <div class='container p-0 m-0 d-none d-lg-block' id='sidebar-collapsable-div'>
+
+                    <!-- settings button -->
+                    <button class="accordion-button align-items-center rounded ps-0 pe-0 collapsed bg-transparent fw-normal" type="button" data-bs-toggle="collapse" data-bs-target="#settings-collapse" aria-expanded="false" aria-controls="settings-collapse">
+                        {% trans "Chat settings" %}
+                    </button>
+                    <!-- /settings button -->
+
+                    <!-- settings options -->
+                    <div class="container-fluid card p-0 pe-1 bg-body-tertiary collapse" id="settings-collapse">
+
+
+                        <!-- hidden field so index_view can distinuish what form is being submitted -->
+                        <input type="hidden" name="form_type" value="profile_form">
+                        <!-- /hidden field so index_view can distinuish what form is being submitted -->
+
+                                <!-- chat settings header -->
+                                <span class='fw-bold'>
+                                    {% trans "Source data settings" %}:
+                                </span>
+                                <!-- /chat settings header -->
+
+                                <!-- data source container -->
+                                <div class='container p-1'>
+                                    <span class='fw-bold'>
+                                        {% trans "Sources used" %}:
+                                        <i class='fas fa-question-circle ml-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title="{% trans "<b>Understanding AI data sources</b><hr><b>Uploaded materials only:</b><br>Within a given chat, the large language model (LLM) will have no memory of things discussed in preceding messages; it will only respond using information in the materials uploaded.<br><br><b>Uploaded materials + chat history:</b><br>Within a given chat, the LLM will recall things discussed in preceding messages, in addition to information in the materials uploaded.<br><br><b>Uploaded materials, chat history, and general knowledge:</b><br>Within a given chat, the large language model (LLM) will recall things discussed in preceding messages, in addition to information in the materials uploaded. When the user requests information that is neither in prior messages, nor the uploaded materials, the LLM may also access uncited internet data to answer questions."|safe %}">
+                                        </i>
+                                    </span>
+                                    <div class='container-fluid p-2'>
+                                        {% for radio in profile_form.data_source %}
+                                            <div class="form-check">
+                                                {{ radio.tag }} {{ radio.choice_label }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <!-- /data source container -->
+
+                                <!-- clear all data sources button -->
+                                <button type="button" class="btn btn-danger btn-sm btn-xsm w-100" id='delete-all-rag-materials-btn'>
+                                    {% trans "Delete all data sources" %}
+                                </button>
+                                <!-- /clear all data sources button -->
+
+                            <hr>
+
+                            <!-- response settings container -->
+                            <div class='text-small m-2 '>
+
+                                <!-- response settings header -->
+                                <span class='fw-bold'>
+                                    {% trans "Response settings" %}:
+                                </span>
+                                <!-- /response settings header -->
+
+                                <!-- response length -->
+                                <div id='response-length-div'>
+                                    <span class="form-label">
+                                        {% trans "Maximum response length (sentences)" %}:
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col'>
+                                            {{ profile_form.response_length }}
+                                        </div>
+                                        <div class='container col-auto' name='response-length-value-box' id='response-length-value-box'>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /response length -->
+
+                                <!-- chat history window -->    
+                                <div id='chat-history-window-div'>
+                                    <span class="form-label">
+                                        {% trans "Chat history" %}:
+                                        <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title="{% blocktrans %}<b>Understanding 'chat window'</b><hr>'Chat window' controls how many rounds of previous user question and LLM answers are used as context for the current LLM answer.<br><br>A larger chat history window will result in improved recollection of information previously discussed in the chat, at the expense of the LLM's ability to extract facts from the documents connected to the LLM.<br><br>Conversely, a smaller chat history window usually results in improved ability to extract facts from the documents connected to the LLM, at the expense of reduced recollection of information previously shared by the user in the chat.{% endblocktrans %}">
+                                        </i>
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col'>
+                                            {{ profile_form.chat_history_window }}
+                                        </div>
+                                        <div class='container col-auto' name='chat-history-window-value-box' id='chat-history-window-value-box'>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <!-- /chat history window -->
+
+
+                                <!-- top p -->
+                                <span class="form-label">
+                                    {% trans "Top p" %}:
+                                    <i class="fas fa-question-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" 
+                                        title="{% trans "<b>Understanding 'top_p'</b><hr>'top_p' controls the variation in diction in a Large Language Model ('LLM') response.<br><br>For example:<br><br>Assume the most recent word in the LLM's response was 'apple' and top_p = 0.90. To generate the next word in the response, the model will find the word that most frequently follows 'apple', add it to a list of options, then repeat the process, each time selecting the next most likely word, until such time that the cumulative probability of those words following 'apple' is >= 90%. At that time, the model will randomly choose from the words on that list and then repeat the process to generate the next word in the response.<br><br>A high value for 'top_p' will result in a response with more varied diction, whereas a low value for 'top_p' will result in more consistent word choice.<br><br>The default top_p for OpenAI chat models is 1.0" %}">
+                                    </i> 
+                                </span>
+                                <div class='row align-items-start'>
+                                    <div class='d-flex col'>
+                                        {{ profile_form.top_p }}
+                                    </div>
+                                    <div class='container col-auto' name='top-p-value-box' id='top-p-value-box-profile'>
+                                    </div>
+                                </div>
+                                <!-- /top p -->
+
+
+                            </div>
+                            <!-- response settings container -->
+
+                            <hr>
+
+                            <!-- recommendations settings container -->
+                            <div class='text-small m-2 '>
+
+                                <!-- recommendations settings header -->
+                                <span class='fw-bold'>
+                                    {% trans "Recommendation settings" %}:
+                                </span>
+                                <!-- /recommendations settings header -->
+
+                                <!-- suggest experts switch -->
+                                <div class="form-check form-switch">
+                                    {{ profile_form.suggest_experts }}
+                                    <span>
+                                        {% trans "Suggest experts" %}
+                                    </span>
+                                </div>
+                                <!-- /suggest experts switch -->
+
+
+                                <!-- div to hold number of experts, experts who speak my language, and sliders -->
+                                <div id="expert-suggestion-configs">
+
+                                    <!-- experts_suggested_number -->
+                                    <span class="form-label">
+                                        {% trans "Experts recommended" %}:
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col'>
+                                            {{ profile_form.experts_suggested_number }}
+                                        </div>
+                                        <div class='container col-auto' name='number-of-experts-value-box' id='number-of-experts-value-box'>
+                                        </div>
+                                    </div>
+                                    <!-- /experts_suggested_number -->
+
+
+                                    <!-- expert_speaks_my_lang -->
+                                    <div class='row'>
+                                        <div class='d-flex align-items-center'>
+                                            <!-- Checkbox -->
+                                            <div class='me-2'>
+                                                {{ profile_form.expert_speaks_my_lang }}
+                                            </div>
+                                            <!-- Label -->
+                                            <span class="form-label">
+                                                {% trans "Only suggest experts who speak" %} {{ current_language_translated }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <!-- /expert_speaks_my_lang -->
+
+
+                                    <!-- recommendation weights header -->        
+                                    <div class="row">
+                                        <span class='fw-bold'>
+                                            {% trans "Weights" %}:
+                                            <i class='fas fa-question-circle ml-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' title='<b>{% trans "Understanding recommendation weights" %}</b><hr>{% trans "The numbers below are relative to one another and allow the user to tilt expert recommendations toward the variables deemed most important." %}'>    
+                                            </i> 
+                                        </span>
+                                    </div>
+                                    <!-- recommendation weights header -->
+                        
+                                    <!-- weight_years -->
+                                    <span class="form-label">
+                                        {% trans "Years of experience" %}
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' name="expert-recommendation-slider">
+                                            {{ profile_form.weight_years }}
+                                        </div>
+                                        <div class='container col-auto' name='recommendation-weight-years-value-box' id='recommendation-weight-years-value-box'>
+                                        </div>
+                                    </div>
+                                    <!-- weight_years -->
+
+                                    
+                                    <!-- weight_industry -->
+                                    <span class="form-label">
+                                        {% trans "Industry" %}:
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' name="expert-recommendation-slider">
+                                            {{ profile_form.weight_industry }}
+                                        </div>
+                                        <div class='container col-auto' name='recommendation-weight-industry-value-box' id='recommendation-weight-industry-value-box'>
+                                        </div>
+                                    </div>
+                                    <!-- /weight_industry -->
+
+                                    
+                                    <!-- weight_role -->
+                                    <span class="form-label">
+                                        {% trans "Job titles" %}:
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' name="expert-recommendation-slider">
+                                            {{ profile_form.weight_role }}
+                                        </div>
+                                        <div class='container col-auto' name='recommendation-weight-role-value-box' id='recommendation-weight-role-value-box'>
+                                        </div>
+                                    </div>
+                                    <!-- weight_role -->
+
+
+                                    <!-- weight_topic -->
+                                    <span class="form-label">
+                                        Topic
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' name="expert-recommendation-slider">
+                                            {{ profile_form.weight_topic }}
+                                        </div>
+                                        <div class='container col-auto' name='recommendation-weight-topic-value-box' id='recommendation-weight-topic-value-box'>
+                                        </div>
+                                    </div>
+                                    <!-- weight_topic -->
+
+
+                                    <!-- weight_grography -->
+                                    <span class="form-label">
+                                        {% trans "Geography" %}
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' name="expert-recommendation-slider">
+                                            {{ profile_form.weight_geography }}
+                                        </div>
+                                        <div class='container col-auto' name='recommendation-weight-geography-value-box' id='recommendation-weight-geography-value-box'>
+                                        </div>
+                                    </div>
+                                    <!-- weight_geography -->
+
+
+                                <!-- /div to hold number of experts, experts who speak my language, and sliders -->
+                                </div>
+
+                            </div>
+                            <!-- /recommendations settings container -->
+
+                            <hr>
+
+                            <!-- model settings container -->
+                            <div class='text-small m-2 '>
+
+                                <!-- model settings header -->
+                                <span class='fw-bold'>
+                                    {% trans "Model settings" %}:
+                                </span>
+                                <!-- /model settings header -->
+
+
+                                <!-- preprocessing
+                                <div class='form-check form-switch'>
+                                    {{ profile_form.preprocessing }}
+                                    <span>
+                                        {% trans "Preprocess data" %}
+                                    </span>
+                                </div>
+                                /preprocessing -->
+
+
+                                <!-- preprocessing model
+                                <div id='preprocessing-model-div'>
+                                    <span class="form-label">
+                                        {% trans "Preprocessing" %}:
+                                        <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                            title="{% trans "<b>Understanding preprocessing model</b><hr>Preprocessing prepares text for ingestion by a Large Language Model (LLM) in several ways, including:<br><ol><br><li><strong>Lemmatization: </strong>The conversion of words into their base or root form (lemma), improving the LLM's ability to assocaite words with one another. For example, the words 'walks', 'walking', or 'walked' would all be converted into the base form of 'walk'.</li><br><li><strong>Removal of stop words: </strong>Removes words that do not contribute meaning to the text, such as 'the', 'is', and 'in'. This improves the LLM's ability to assess the fundamental meaning of the text.</li></ol><br><br>" %}">
+                                        </i>
+                                    </span>
+                                        
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' id='preprocessing-model'>
+                                            {{ profile_form.preprocessing_model }}
+                                        </div>
+                                    </div>
+                                </div>
+                                /preprocessing model -->
+
+                                <!-- vectorization model -->
+                                <div id='vectorization-model-div mb-2'>
+                                    <span class="form-label">
+                                        {% trans "Vectorization" %}:
+                                    </span>
+                                    <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                        title="{% trans "<b>Understanding vectorization model</b><hr>Vectorization is the process in which each token (typically a word) in a body of text is assessed for its similarity to all the other tokens in a body of text. That similarity is expressed via a vector with many dimensions (typically > 240).<br><br><strong>A vectorization analogy: </strong>The position of a given token within vectorspace is similar to a marble floating inside a transparent basketball. If we strategically position the marble inside the basketball relative to its similarity to the other marbles in the same basketball (according to the dimensions of color, size, etc), we can then describe that marble's location within the basketball via coordinates. Marbles that are, on balance, more similar to others, would be nearby one another within the basketball." %}">
+                                    </i>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' id='vectorization-model'>
+                                            {{ profile_form.tokenization_and_vectorization_model }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /vectorization model -->
+
+                                <!-- similarity metric -->
+                                <div id='similarity-metric-div mb-2'>
+                                    <span class="form-label">
+                                        {% trans "Similarity metric" %}:
+                                    </span>
+                                    <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                        title="{% trans "<b>Understanding similarity metric</b><hr>The similarity metric is the means by which a LLM measures the closeness (e.g. the similarity) between two vectorized tokens within a given vectorspace. This setting is used in setting up the user's vector database, optimizing it for the similarity metric employed by the user's chosen vectorization model.<br><br>The recommended similarity metric reflects the similarity metric associated with the user's currently-selected vectorization model." %}">
+                                    </i>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col' id='similarity-metric'>
+                                            {{ profile_form.similarity_metric }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /similarity metric -->
+
+                                <!-- retriever model -->
+                                <div id='retriever-model-div mb-2'>
+                                    <span class="form-label">
+                                        {% trans "Retriever" %}:
+                                    </span>
+                                    <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                        title="{% trans "<b>Understanding retriever model</b><hr>Retrievers are the models that take the user’s vectorized input and compares it to the vectorized source documents to find the most helpful information and assemble that information into a coherent response to the user’s question.<br><br>The models listed vary considerably in their speed and capabilities. Users should click the link provided to learn about a model before selecting it for use." %}">
+                                    </i>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col'>
+                                            {{ profile_form.retriever_model }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /retriever model -->
+
+                                <!-- top k -->
+                                <div id='top-k-div'>
+                                    <span class="form-label">
+                                        {% trans "Top k" %}:
+                                    </span>
+                                    {% trans "Top k" %}:
+                                    <i class="fas fa-question-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" 
+                                        title="{% trans "<b>Understanding top k</b><hr>Top k specifies how many chunks of source data will be used in formulating the model's response.<br><br>A higher value for 'k' will typically result in broader answers but are more likely to include irrelevant data.<br><br>Conversely, a lower 'k' value will typically generate more specific answers, but may fail to extract context effectively and/or increase the chances of a non-answer.<br><br>The default value for LangChain's 'k' is 5.<br><br>Important note: LangChain's 'k' value deals with <strong>source data only</strong> and not the linguistic properties of the model's <strong>response</strong> and thus, should not be confused with the concept of 'top k' which is a configuration that helps determine the way the model composes its response." %}">
+                                    </i>  
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col'>
+                                            {{ profile_form.langchain_k }}
+                                        </div>
+                                        <div class='container col-auto' name='langchain-k-value-box' id='langchain-k-value-box-profile'>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /top k -->
+
+
+                                <!-- temperature -->
+                                <div id='temperature'>
+                                    <span class="form-label">
+                                        {% trans "Temperature" %}:
+                                        <i class='fas fa-question-circle ms-2' data-bs-toggle='tooltip' data-bs-placement='top' data-bs-html='true' 
+                                            title="{% trans "<b>Understanding model temperature</b><hr>A LLM's temperature setting is a number between 0 and 1 that determines the model's ability to 'interpret' user input and construct responses based on that assumed user intent.<br><br>A lower temperature will result in reduced ability to interpret a user question, but also lowers the chance of an incorrect response from the model (aka. a 'hillucination').<br><br>Conversely, a higher temperature will result in increased ability to interpret user input, but will increase the likelyhood of hillucination.<br><br>The default temperature for AI chat bots, such as ChatGTP, is 0.7, while default temperature for information retrieval applications is usually close to 0." %}">
+                                        </i> 
+                                    </span>
+                                    <div class='row align-items-start'>
+                                        <div class='d-flex col'>
+                                            {{ profile_form.temperature }}
+                                        </div>
+                                        <div class='container col-auto' name='response-temperature-value-box' id='response-temperature-value-box-profile'>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /top k -->
+
+                            </div>
+                            <!-- /model settings container -->
+                    </div>
+                    <!-- /settings options -->
+
+
+                    <!-- settings button -->
+                    <button class="accordion-button align-items-center rounded ps-0 pe-0 collapsed bg-transparent fw-normal" type="button" data-bs-toggle="collapse" data-bs-target="#history-collapse" aria-expanded="false" aria-controls="history-collapse">
+                        {% trans "Chat history" %}
+                    </button>
+                    <!-- /settings button -->
+
+                    <!-- chat history -->
+                    <div class="container-fluid card p-0 pe-2 bg-body-tertiary mt-2 collapse text-small" id="history-collapse">
+
+                        <!-- chat history sub-container -->
+                        <div class='d-inline-block overflow-x-auto' id='chat-history-div'>  
+                        </div>
+                        <!-- /chat history sub-container -->
+
+                    </div>
+                    <!-- /chat history -->
+
+                </div>
+                <!-- /settings, history div that is shown/hidden by button -->
+            
+            {% else %}
+
+                <div class='mt-4 mb-4' id='back-to-chat-button-profile'>
+                    <a href='{% url "aichat_chat:index" %}' class='btn btn-primary w-100'>
+                        {% trans "Back to chat" %}
+                    </a>
+                </div>
+                
+            {% endif %}
+            <!-- / if checking if current view is index_view or else, sth else -->
+
+            <hr>
+
+            
+            <!-- language selector -->
+            <select class='select compact p-1 mb-2 small' id="language-selector">
+                {% for code, details in supported_languages.items %}
+                <option value="{{ code }}" {% if code == current_language %}selected{% endif %}>
+                    {{ details.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <!-- /language selector -->
+            
+            
+            <!-- container for HR and user.first_name -->
+            <div class='w-100' id='sidebar-container-first_name'>
+                
+
+                <div class="dropdown pb-2" name='sidebar_dropdown_user'>
+                    <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src='{% static "aichat_users/matt_photo_sm.png" %}' alt="" width="32" height="32" class="rounded-circle d-none d-lg-block me-2">
+                        <strong>
+                            {{ user.first_name }}
+                        </strong>
+                    </a>
+                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
+                        <li>
+                            <a class="dropdown-item border-bottom" href="{% url 'aichat_users:favorites' %}">{% trans "Saved experts" %}</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item border-bottom" href="{% url 'aichat_users:profile' %}">{% trans "Profile" %}</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'aichat_users:logout' %}">{% trans "Log out" %}</a>
+                        </li>
+                    </ul>
+                    
+                </div>
+            </div>
+            <!-- /container for HR and user.first_name -->
+            
+            {% endif %}
+            <!-- /if user is signed in, display nav items in sidebar -->
+
+        </div>
+        <!-- /sidebar div -->
+
+        <!-- body div -->
+        <div class="flex-grow-1 d-flex flex-column overflow-auto" id='non-sidebar-div'>
+
+            <!-- django's messages function -->
+            {% if messages %}
+            <header>
+                <div class='alert alert-primary mb-0 text-center' role='alert'>
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            </header>
+            {% endif %}
+            <!-- /django's messages function -->
+
+            <!-- timeout modal controlled via JS -->
+            {% if user.is_authenticated %}
+            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                {% trans "Timeout warning" %}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>{% trans "You will be logged out in 5 minutes due to inactivity. Please extend your session or log out via the buttons below."%} 
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" name='timeout-logout-button' data-logout-url="{% url 'aichat_users:logout' %}">
+                                {% trans "Log out" %}
+                            </button>
+                            <button type="button" class="btn btn-success" name='timeout-extend-button' data-readiness-check-url="{% url 'readiness_check' %}">
+                                {% trans "Remain logged in" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <!-- /timeout modal controlled via JS -->
+
+            <!-- main content -->
+            {% block main %}
+            {% endblock %}
+            <!-- /main content -->
+
+            
+            <!-- custom JavaScript files -->
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "utils.js" %}'></script>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "aichat.js" %}'></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "favorites.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "loadingspinner.js" %}'></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "ragDeleteSources.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "ragDocMgmt.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "ragUrlMgmt.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "retrieveChatHistory.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "sessiontimeout.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "sliderUpdates.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "streamResponse_aichat.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "translate.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "updateUserProfile.js" %}' defer></script>
+            <script nonce='{{ request.csp_nonce }}' type="module" src='{% static "uservalidation.js" %}' defer></script>
+            <!-- /custom JavaScript files -->
+        
+        <!-- /body div -->
+        </div>
+
+    </div>
+    <!-- /sidebar and body div -->
+
+
+    <!-- footer -->
+    <footer class='footer footer-aichat'>
+        <span>
+            &copy; <a href='https://www.linkedin.com/company/kebayoran-technologies'>Kebayoran Technologies</a>, 2024
+            <br>
+            {% trans "Leverages models from" %} <a href='https://spacy.io/'>spaCy</a>, <a href='https://huggingface.co/'>Hugging Face</a>, <a href='https://www.anthropic.com/'>Anthropic</a> and, <a href='https://platform.openai.com/'>OpenAI</a> 
+        </span>
+    </footer>
+    <!-- /footer -->
+
+</body>
+
+
+</html>

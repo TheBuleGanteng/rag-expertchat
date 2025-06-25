@@ -1,0 +1,22 @@
+{% extends 'aichat_users/layout.html' %}
+{% load i18n %}
+
+
+
+{% block title %}
+    {% trans "Confirm registration" %}
+{% endblock %}
+
+{% block main %}
+    <div class='container-fluid pt-2 pb-5'>
+
+        <!-- Instructional text -->
+        <div class="container-fluid ps-0 mb-1">
+            <div class="container-fluid container-instructions-start-bold">
+                {% trans "Thank you for confirming your registration. If you are not automatically redirected to your account, please click" %} <a href="{{ url_for('login') }}">{% trans "here" %}</a> {% trans "to login" %}.
+            </div>
+        </div>
+        <!-- /Instructional text -->
+        
+    </div>
+{% endblock %}

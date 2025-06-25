@@ -1,0 +1,153 @@
+{% extends 'aichat_users/layout.html' %}
+{% load i18n %}
+
+
+{% block title %}
+    {% trans "Saved experts" %}
+{% endblock %}
+
+{% block main %}
+    <div id='main-div-favorites'>
+
+        <!-- content-container-favorites -->
+        <div class='container m-0 p-0' id='content-container-favorites'>
+            
+            <!-- title bar that stretches full width -->
+            <div class='w-100 m-0 p-0 mb-3' id="title-favorites">
+
+                <!-- title-favorites -->
+                <div class='container pt-2 pb-2 '>
+                    <span class="h2">
+                        {% trans "Saved experts" %}
+                    </span>
+                </div>
+                <!-- /title-favorites -->
+
+            </div>
+            <!-- /title bar that stretches full width -->
+
+            <!-- favorite-cards-main-div -->
+            <div class="container" id="favorite-cards-main-div">
+                
+                {% if favorites_data %}
+                
+                    <!-- row to align expert cards horizontally -->
+                    <div class="row m-0 w-100" id="expertRowDiv">
+
+                        <!-- for each favorited expert, populate the prototypical expert card below -->
+                        {% for favorite in favorites_data %}
+                            
+                            <!-- parent element for profile card -->
+                            <div class="card col-12 col-sm-6 col-md-4 mt-2 mb-2 p-1" id="expertCardParentDiv-{{ favorite.id }}">
+                                
+                                <!-- row for card star, title, and book call button -->
+                                <div class="row m-0 w-100 align-items-center" id="expertCardTitleRow-{{ favorites_data.id }}">
+
+                                    <!-- div to ensure card star and title are left-aligned, while book call btn remains right-aligned within card -->
+                                    <div class='d-flex align-items-center col-8 p-0 m-0' id="expertCardStarTitleDiv-{{ favorite.id }}">
+
+                                        <!-- star icon for expert card -->
+                                        <h5 class="bi bi-star-fill yellow-star me-1" name='favorite-icon' id="expertCardStar-{{favorite.id}}" data-expert-id="{{ favorite.id }}">
+                                        </h5>
+                                        <!-- /star icon for expert card -->
+
+                                        <!-- expert's name -->
+                                        <h5 class="title" id="expertCardTitle-{{ favorite.id }}">
+                                            {{ favorite.name_first }} {{ favorite.name_last }}
+                                        </h5>
+                                        <!-- /expert's name -->
+
+                                    </div>
+                                    <!-- /div to ensure card star and title are left-aligned, while book call btn remains right-aligned within card -->
+
+                                    <!-- book call button -->
+                                    <button class='btn btn-primary btn-sm col-3 ms-auto' id="expertCardBookCallBtn-{{ favorite.id }}">
+                                        Book call
+                                    </button>
+                                    <!-- book call button -->
+
+                                </div>
+                                <!-- /row for card star, title, and book call button -->
+
+                                <!-- expert card photo info div -->
+                                <div class="row w-100" id="expertCardPhotoInfoDiv-{{ favorite.id }}">
+
+                                    <!-- photo div for expert profile card -->
+                                    <div class="col-5" id="expertCardPhotoDiv-{{ favorite.id }}">
+                                        
+                                        <!-- expert photo -->
+                                        <img class="card-img-top" src="{{ favorite.photo}}" id="expertCardPhoto-{{ favorite.id }}" alt="photo of {{favorite.name_first}} {{favorite.name_last}}">
+                                        <!-- /expert photo -->
+
+                                    </div>
+                                    <!-- /photo div for expert profile card -->
+
+                                    <!-- info div for expert profile card -->
+                                    <div class="col-7" id="expertCardInfoDiv-{{ favorite.id }}">
+
+                                        <!-- years of work experience -->
+                                        <small>
+                                            <strong>
+                                                {% trans "Years of experience" %}: {{favorite.total_years}} {% if favorite.total_years == "1" %} {% trans "year" %} {% else %} {% trans "years" %} {% endif %}
+                                            </strong>
+                                        </small>
+                                        <!-- /years of work experience -->
+
+                                        <br>
+
+                                        <!-- languages spoken -->
+                                        
+                                            <div class="d-flex align-items-start small fst-italic">
+                                                <div class="me-1 small">
+                                                    {% trans "Speaks" %}:
+                                                </div>
+                                                <div class="small">
+                                                    {{favorite.languages_spoken}}
+                                                </div>
+                                            </div> 
+                                        
+                                        <!-- /languages spoken -->
+
+                                        <!-- bulleted list for work experience -->
+                                        <ul>
+                                            <li>
+                                                {{ favorite.role1 }}, {{ favorite.employer1 }}, {{ favorite.regionCode1 }} 
+                                            </li>
+                                            <li>
+                                                {{ favorite.role2 }}, {{ favorite.employer2 }}, {{ favorite.regionCode2 }}
+                                            </li>
+                                        </ul>
+                                        <!-- bulleted list for work experience -->
+
+                                    </div>
+                                    <!-- /info div for expert profile card -->
+
+
+                                </div>
+                                <!-- /expert card photo info div -->
+
+                            </div>               
+                            <!-- /parent element for profile card -->
+                        
+                        {% endfor %}
+                        <!-- /for each favorited expert, populate the prototypical expert card below -->
+
+                    </div>
+                    <!-- /row to align expert cards horizontally -->
+                
+                {% else %}
+                
+                    <p>{% trans "No favorites added" %}.</p>
+                
+                {% endif %}
+
+            </div>
+            <!-- /favorite-cards-main-div -->
+
+        </div>
+        <!-- /content-container-favorites -->
+
+
+    </div>
+
+{% endblock %}
