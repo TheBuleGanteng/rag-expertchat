@@ -34,7 +34,7 @@ from langchain_core.runnables import RunnableMap
 from langchain_core.runnables import Runnable
 from typing import Dict, Union
 from langchain_core.messages import BaseMessage
-
+import traceback
 
 
 logger = logging.getLogger('django')
@@ -171,13 +171,16 @@ def set_up_retriever(user):
             pinecone_index = pc.Index(index_name)
             
             # Create vectorstore using new syntax
+            namespace = str(user.id)
             vectorstore = PineconeVectorStore(
                 index=pinecone_index,
                 embedding=embedding_generator,
-                text_key="text"  # This should match your metadata structure
+                text_key="text",  # This should match your metadata structure
+                namespace=namespace
             )
             logger.info(f'running set_up_retriever() ... '
                          f'connected to Pinecone vectorstore: { vectorstore }')
+            logger.debug(f'Creating vectorstore with namespace: {namespace}')
 
             # Create retriever using vectorstore
             retriever = vectorstore.as_retriever(
@@ -190,7 +193,9 @@ def set_up_retriever(user):
             return retriever
         
         except Exception as e:
-            logger.error(f'Failed to save Retriever settings for user {user} due to: {e}')
+            logger.error(f'running set_up_retriever ... DETAILED ERROR in set_up_retriever for user {user}: {str(e)}')
+            logger.error(f'running set_up_retriever ... ERROR TYPE: {type(e).__name__}')
+            logger.error(f'running set_up_retriever ... FULL TRACEBACK: {traceback.format_exc()}')
             retriever = None
             return retriever
 
@@ -391,12 +396,51 @@ def stream_response_to_user(
 
         # Step 6: Retrieve the relevant docs
         retriever = set_up_retriever(user)  
+
+        if retriever is None:
+            logger.error(f'RETRIEVER IS None - setup failed!')
+            return JsonResponse({'status': 'error', 'message': 'Error: failed to create retriever'}, status=500)
+        else:
+            logger.info(f'RETRIEVER SETUP SUCCESS: {type(retriever)}')
+            logger.info(f'RETRIEVER ATTRIBUTES: {dir(retriever)}')
+
         if not retriever:
             logger.error(f'running stream_response_to_user() ... failed create or access the retriever')
             return JsonResponse({'status': 'error', 'message': 'Error: failed create or access the retriever'}, status=500)
         logger.debug(f'running stream_response_to_user() ... sucessfully pulled retriever: { retriever }')
 
         #retrieved_chunks = retriever.vectorstore.similarity_search_with_score(user_input)
+        
+        # Check if vectors exist in the index
+        try:
+            # Use the existing Pinecone client setup from your code
+            PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
+            pc = PineconeClient(api_key=PINECONE_API_KEY)
+            index_name = 'vectorized-sources'
+            pinecone_index = pc.Index(index_name)
+            
+            # Get index stats
+            index_stats = pinecone_index.describe_index_stats()
+            logger.info(f'PINECONE INDEX STATS: {index_stats}')
+            
+            # Check namespace specifically for this user
+            namespace = str(user.id)
+            logger.info(f'USER ID FOR NAMESPACE: {namespace}')
+            
+            # Try a direct query to the vectorstore to see if anything exists
+            try:
+                simple_results = retriever.vectorstore.similarity_search("test", k=1)
+                logger.info(f'SIMPLE TEST QUERY RESULTS: {len(simple_results)} chunks found')
+                if simple_results:
+                    logger.info(f'SAMPLE RESULT: {simple_results[0].page_content[:100]}...')
+            except Exception as search_error:
+                logger.error(f'ERROR IN SIMILARITY SEARCH: {search_error}')
+            
+        except Exception as e:
+            logger.error(f'ERROR CHECKING PINECONE: {e}')
+        
+        
+        
         retrieved_chunks = retriever.invoke(user_input)
         logger.debug(f'running stream_response_to_user() ... '
                      f'user_input is: { user_input } and '
@@ -415,6 +459,15 @@ def stream_response_to_user(
         # Join the list entries to form a single string for context
         context = ' '.join(context)
         logger.debug(f'running stream_response_to_user() ... context is: { context }')
+
+
+        logger.info(f'USER QUERY: {user_input}')
+        logger.info(f'RETRIEVED {len(retrieved_chunks)} CHUNKS:')
+        for i, chunk in enumerate(retrieved_chunks):
+            logger.info(f'CHUNK {i}: {chunk.page_content[:200]}...')
+            logger.info(f'CHUNK {i} METADATA: {chunk.metadata}')
+        logger.info(f'FINAL CONTEXT LENGTH: {len(context)} characters')
+        logger.info(f'CONTEXT PREVIEW: {context[:500]}...')
             
         # Step 8: Append each answer chunk as it comes in, passing in user_input
         answer_chunks = []  # Initiate a list to hold the chunks of a given response

@@ -209,3 +209,6 @@ __marimo__/
 
 # Gitignored path
 gitignored/
+
+# Uploaded reports
+media/
