@@ -10,6 +10,7 @@ import spacy
 from translations.helpers.translate import detect_language
 from .vectorize_helpers import create_vector_id, CustomEmbeddings, connect_to_pinecone, Document, preprocess, select_preprocessing_model
 from translations.helpers.translate import detect_language
+from typing import cast
 
 
 logger = logging.getLogger('django')
@@ -50,6 +51,8 @@ def vectorize_docs(files, pc, summary_method, user ):
     logger.debug(f'running vectorize_docs() ... docs[] intialized to: { docs }')
 
     for file in files:  # Process each uploaded file
+        language = None
+        preprocessing_model_key = None
         file_content = file.read()  # Load the file content into memory
         
         # Debugging: Print the size of the file content
@@ -72,22 +75,23 @@ def vectorize_docs(files, pc, summary_method, user ):
                 combined_text = ""
                 for page_num in range(min(3, document.page_count)):
                     page = document.load_page(page_num)
-                    text = page.get_text()
+                    page = cast(fitz.Page, document.load_page(page_num))
+                    text = page.get_text() # type: ignore
                     combined_text += f" {text}"  # Accumulate text from the first three pages
                 
                 # Detect the language of the combined text
                 if combined_text.strip():
                     language = detect_language(combined_text) or None
-                preprocessing_model_key = select_preprocessing_model(language_code=language)
-                
-        else:
-            language = None
+                    if language:
+                        preprocessing_model_key = select_preprocessing_model(language_code=language)
+                    else:
+                        logger.error(f"running vectorize_docs ... no value for language, returning error")
 
         
         # Detect human language for current page
         for page_num in range(document.page_count):
             page = document.load_page(page_num)
-            text = page.get_text()
+            text = page.get_text() # type: ignore
 
             # Create a Document object for that page
             docs.append(Document(
@@ -142,6 +146,7 @@ def vectorize_docs(files, pc, summary_method, user ):
 
     # Step 6: Iterate over each item in all_document_splits
     for document_split in all_document_splits:
+        language = None
         
         type= 'document' # Specified here b/c repeatedly used below
         date_accessed = str(timezone.now().date())
@@ -153,7 +158,10 @@ def vectorize_docs(files, pc, summary_method, user ):
 
             # If auto-detect, load the model based on the key (e.g. the detected language)
             if auto_detect_preprocessing_model:
-                preprocessing_model_loaded = spacy.load(preprocessing_model_key)
+                if preprocessing_model_key is None: # type: ignore
+                    raise RuntimeError("Preprocessing model key was not set due to language detection failure.")
+
+                preprocessing_model_loaded = spacy.load(preprocessing_model_key) # type: ignore
                 logger.info(f'running vectorize_docs() ... '
                             f'auto_detect_preprocessing_model is active, '
                             f'preprocessing_model_loaded is: { preprocessing_model_loaded }')

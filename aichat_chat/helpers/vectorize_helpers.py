@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
-from .credentials import OPENAI_API_KEY
 from django.conf import settings
 import hashlib
+from langchain_core.embeddings import Embeddings
+
 from langchain_openai import OpenAIEmbeddings
+
 import logging
 from .models_supported import tokenization_and_vectorization_models_supported, preprocessing_models_supported
 from nltk.util import ngrams
@@ -10,24 +12,25 @@ import numpy as np
 from .open_source_helpers import *
 import os
 from pinecone import Pinecone, PineconeException, ServerlessSpec
+from pydantic import SecretStr
 import tiktoken
 import time
 import torch
 import torch.nn.functional as F
 from translations.helpers.translate import translate
-
-from langchain_core.embeddings import Embeddings
 from typing import List
-
-
 
 logger = logging.getLogger('django')
 USER_AGENT = os.getenv('USER_AGENT')
+
 
 __all__ = ['CustomEmbeddings', 'Document', 'Website', 'connect_to_pinecone', 'create_index_if_not_present', 'delete_obsolite_vectors_from_index', 'format_full_web_address','generate_embedding', 'preprocess', 'select_preprocessing_model' ]
 
 # Object classes ------------------------------------------------
 
+openai_key = os.getenv("OPENAI_API_KEY")
+if not openai_key:
+    raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
 
 # Defines a custom wrapper similar to HuggingFaceEmbeddings, but allows for use of both sentence-transformer and BERT models
 # Correct fixes for your CustomEmbeddings class
@@ -41,10 +44,10 @@ class CustomEmbeddings(Embeddings):  # Now inherits from Embeddings
         
         if tokenization_and_vectorization_model in ['gpt-4o', 'gpt-4o-mini']:
             # Fix 1: Handle the SecretStr issue by checking if OPENAI_API_KEY is not None
-            if OPENAI_API_KEY:
+            if openai_key:
                 self.embeddings = OpenAIEmbeddings(
                     model="text-embedding-ada-002",
-                    api_key=OPENAI_API_KEY
+                    api_key=SecretStr(openai_key)
                 )
             else:
                 # Let OpenAIEmbeddings use environment variable automatically
@@ -130,8 +133,8 @@ def calculate_similarities(retrieved_chunks, answer_text, user):
     # Get embeddings based on model type
     if tokenization_and_vectorization_model in ['gpt-4o', 'gpt-4o-mini']:
         # Fix: Remove the openai_api_key parameter entirely or handle None case
-        if OPENAI_API_KEY:
-            embeddings_generator = OpenAIEmbeddings(api_key=OPENAI_API_KEY)
+        if openai_key:
+            embeddings_generator = OpenAIEmbeddings(api_key=SecretStr(openai_key))
         else:
             # Let it use environment variable automatically
             embeddings_generator = OpenAIEmbeddings()

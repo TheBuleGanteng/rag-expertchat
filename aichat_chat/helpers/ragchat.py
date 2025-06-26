@@ -86,7 +86,7 @@ class DjangoChatMessageHistory(BaseChatMessageHistory):
                 self._messages.append(HumanMessage(content=message['message']))
 
     @property
-    def messages(self) -> List[BaseMessage]:
+    def messages(self) -> List[BaseMessage]: # type: ignore
         """Return the list of messages."""
         return self._messages
 

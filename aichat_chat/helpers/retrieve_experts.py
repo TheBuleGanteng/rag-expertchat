@@ -7,8 +7,12 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')
 sys.path.insert(0, project_root)
 
 # Set the settings module
-PROJECT_SETTINGS_FILE = os.getenv("PROJECT_SETTINGS_FILE")
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', PROJECT_SETTINGS_FILE)
+if "DJANGO_SETTINGS_MODULE" not in os.environ:
+    settings_module = os.getenv("PROJECT_SETTINGS_FILE")
+    if not settings_module:
+        raise RuntimeError("PROJECT_SETTINGS_FILE environment variable is not set.")
+    os.environ["DJANGO_SETTINGS_MODULE"] = settings_module
+
 
 # Setup Django
 django.setup()
@@ -30,13 +34,24 @@ from sentence_transformers import SentenceTransformer
 logger = logging.getLogger('django')
 
 # Setting up environment variables for OpenAI
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+openai_key = os.getenv("OPENAI_API_KEY")
+if not openai_key:
+    raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
+
+openai_model = os.getenv("OPENAI_MODEL")
+if not openai_model:
+    raise RuntimeError("OPENAI_MODEL environment variable is not set.")
+
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+if not pc:
+    raise RuntimeError("PINECONE_API_KEY environment variable is not set.")
 index = pc.Index('experts')  # Connect to the appropriate index
 
-
-llm = ChatOpenAI(
-    model_name=os.getenv("OPENAI_MODEL"), api_key=os.getenv("OPENAI_API_KEY"), temperature=0.7
+# Using working ChatOpenAI import; ignoring type checker due to mismatch with stubs
+llm = ChatOpenAI(  
+    model_name=openai_model,  # type: ignore
+    api_key=openai_key,  # already validated earlier
+    temperature=0.7
 )
 
 # Initialize the model for vectorization
@@ -92,7 +107,7 @@ def retrieve_experts(
     logger.info(f'running retrieve_experts() ... extracted terms_translated is: { extracted_terms_translated }')
 
     # Vectorize the extracted terms
-    query_vector = model.encode(extracted_terms_translated).tolist()
+    query_vector = model.encode(str(extracted_terms_translated)).tolist()
     #logger.debug(f'running retrieve_experts() ... query_vector is: { query_vector }')
 
     # Query Pinecone vector database
@@ -104,7 +119,8 @@ def retrieve_experts(
     logger.debug(f'running retrieve_experts() ... querying the pinecone database')
     
     # Process the query response
-    expert_ids = [match['metadata']['expert_id'] for match in query_response['matches']]
+    
+    expert_ids = [match['metadata']['expert_id'] for match in query_response['matches']] # type: ignore
     if not expert_ids:
         return ["No experts available on this topic"]
 
@@ -126,15 +142,15 @@ def retrieve_experts(
     geography_weight = float(user.aichat_userprofile.weight_geography)
 
     for expert in related_experts:
-        experiences = expert.experiences.all()
+        experiences = expert.experiences.all() # type: ignore
         first_experience = experiences[0] if len(experiences) > 0 else None
         second_experience = experiences[1] if len(experiences) > 1 else None
         
-        total_years = str(sum(experience.years for experience in expert.experiences.all()))
+        total_years = str(sum(experience.years for experience in expert.experiences.all())) # type: ignore
 
         
         # Split extracted terms into individual words
-        extracted_terms_words = extracted_terms_translated.split()
+        extracted_terms_words = str(extracted_terms_translated).split()
         logger.debug(f'running retrieve_experts() ... extracted_terms_words is: { extracted_terms_words }')
 
 
@@ -162,9 +178,9 @@ def retrieve_experts(
             role_score += round(role_matches * role_weight, 2)
 
         # Calculate topic score
-        for topic in expert.topics.all():
+        for topic in expert.topics.all(): # type: ignore
             topic_matches = sum(1 for term in extracted_terms_words if term.lower() in topic.topic.lower())
-            logger.debug(f'running retrieve_experts() ... for expert: { expert.name_first } { expert.name_last }, experience: { experience.role }, { experience.employer } topic_matches is: { topic_matches }')
+            logger.debug(f'running retrieve_experts() ... for expert: { expert.name_first } { expert.name_last }, experience: { experience.role }, { experience.employer } topic_matches is: { topic_matches }') # type: ignore
             topic_score += round(topic_matches * topic_weight, 2)
 
 
@@ -195,10 +211,10 @@ def retrieve_experts(
 
         # Check if the current expert as been favorited by the logged-in user
         # Check if this expert is a favorite of the user
-        is_favorite = expert.added_as_favorite_by.filter(user=user).exists()
+        is_favorite = expert.added_as_favorite_by.filter(user=user).exists() # type: ignore
 
         expert_data.append({
-            'id': expert.id,
+            'id': expert.id, # type: ignore
             'is_favorite': is_favorite,
             'name_first': expert.name_first,
             'name_last': expert.name_last,
@@ -211,7 +227,7 @@ def retrieve_experts(
             'regionCode2': second_experience.geography.region_code if second_experience else None,
             'total_years': total_years,
             'total_score': total_score,
-            'languages_spoken': ', '.join([language.language.name for language in expert.languages.all()])
+            'languages_spoken': ', '.join([language.language.name for language in expert.languages.all()]) # type: ignore
 
         })
         
