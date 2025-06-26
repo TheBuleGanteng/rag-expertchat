@@ -7,6 +7,7 @@ class ChatHistory(models.Model):
     session_id = models.TextField()
     message = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
+    id = models.AutoField(primary_key=True)
 
     def __str__(self):
         return f'{self.session_id} {self.message}'

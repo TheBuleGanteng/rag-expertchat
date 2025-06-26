@@ -114,7 +114,7 @@ def delete_rag_sources(request):
 #-------------------------------------------------------------------------
 
 
-@require_http_methods({'POST'})
+@require_http_methods(["POST"])
 @login_required(login_url='aichat_users:login')
 def generate_embeddings(request):    
     logger.info(f'running generate_embeddings() ... view started')
@@ -123,16 +123,14 @@ def generate_embeddings(request):
     user = request.user
     logger.debug(f'running generate_embeddings() ... user is: { user }')
 
-    set_up_retriever_response = set_up_retriever(user=user)
+    retriever = set_up_retriever(user=user)
     
-    # Handle the response after running vectroize_sources
-    if set_up_retriever_response.status_code == 200:
-        logger.info(f'running generate_embeddings() ... set_up_retriever() succeeded with status: {set_up_retriever_response.status_code}')
+    if retriever:
+        logger.info('Retriever successfully set up.')
         return JsonResponse({'status': 'success', 'message': _('Materials uploaded and processed successfully. The bot is ready for chatting!')})
-    
     else:
-        logger.error(f'running generate_embeddings() ... set_up_retriever() failed with status: {set_up_retriever_response.status_code}')
-        return JsonResponse({'status': 'error', 'message': _('Error uploading documents.'), 'errors': set_up_retriever.json().get('errors', {})}, status=400)
+        logger.error('Error setting up retriever.')
+        return JsonResponse({'status': 'error', 'message': _('Error uploading documents.')}, status=400)
 
 
 # -------------------------------------------------------------------------
@@ -527,6 +525,8 @@ def rag_url(request):
                 logger.debug(f'running rag_url() ... '
                             f'deleted the following urls from the index: { urls_from_formset }')
             
+            logger.info(f'urls_to_vectorize contents: {urls_to_vectorize}')
+            logger.info(f'Length of urls_to_vectorize: {len(urls_to_vectorize)}')
             
             if urls_to_vectorize:
                 vectorize_web( 

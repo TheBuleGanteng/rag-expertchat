@@ -279,8 +279,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             console.log(`running streamResponse_aichat.js ... EventSource closed successfully after receiving [END] message.`);
 
                             // Refresh the chat history sidebar
-                            console.log(`running streamresponse_aichat.js ... refreshed chat history sidebar`)
-                            loadChatHistorySidebar();
+                            //console.log(`running streamresponse_aichat.js ... refreshed chat history sidebar`)
+                            //loadChatHistorySidebar();
 
                         //
                     } else {

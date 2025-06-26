@@ -33,8 +33,8 @@ def vectorize_web(
     
     
     # Step 1: Connect to Pinecone index
-    deleted_existing_index, index, namespace = connect_to_pinecone(user)
-    logger.debug(f'running vectorize_web() ... index is: { index } and namespace is: { namespace }')
+    #deleted_existing_index, index, namespace = connect_to_pinecone(user)
+    #logger.debug(f'running vectorize_web() ... index is: { index } and namespace is: { namespace }')
 
     
     # Step 2: Determine the preprocessing model is specified (e.g. not auto-select).
@@ -224,5 +224,9 @@ def vectorize_web(
 
     # Step 10: Upsert all the newly-created vectors to Pinecone
     # Note, upsert = update + insert, so if a vector with the same ID already exists in the database, it will be updated.
-    index.upsert(vectors=all_website_splits_vectorized, namespace=namespace)
-    logger.debug(f"running vectorize_web() ... stored {len(all_website_splits_vectorized)} website vectors in Pinecone index.")
+    try:
+        result = index.upsert(vectors=all_website_splits_vectorized, namespace=namespace)
+        logger.info(f'Successfully upserted {len(all_website_splits_vectorized)} vectors to namespace {namespace}. Result: {result}')
+    except Exception as e:
+        logger.error(f'Failed to upsert vectors to Pinecone: {str(e)}')
+        raise

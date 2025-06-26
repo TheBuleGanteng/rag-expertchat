@@ -26,6 +26,17 @@ from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone as PineconeClient
 
 
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.runnables import RunnableLambda
+from typing import List, Sequence
+from langchain_core.runnables import RunnableMap
+from langchain_core.runnables import Runnable
+from typing import Dict, Union
+from langchain_core.messages import BaseMessage
+
+
+
 logger = logging.getLogger('django')
 
 __all__ = ['set_up_retriever', 'stream_response_to_user']
@@ -51,11 +62,11 @@ no_use_gn_instructions = "Do not use knowledge from the internet to respond to m
 
 
 # This allows prior messages for a user + session combination to be used in conjunction with uploaded documents to answer a user's question.
-class DjangoChatMessageHistory:
+class DjangoChatMessageHistory(BaseChatMessageHistory):
     def __init__(self, session_id, chat_history_window_int=None):
         self.session_id = session_id
-        self.messages = []  # Initialize the messages attribute
-        self.chat_history_window_int = chat_history_window_int  # Store the chat history window value
+        self.chat_history_window_int = chat_history_window_int
+        self._messages: List[BaseMessage] = []  # Store as BaseMessage objects
         self._load_messages()
 
     def _load_messages(self):
@@ -65,19 +76,35 @@ class DjangoChatMessageHistory:
         if self.chat_history_window_int is not None:
             messages_query = messages_query[:self.chat_history_window_int]
 
-         # Filter out responses that match the specific "no answer" content
+        # Filter out responses that match the specific "no answer" content
         excluded_response = "I'm sorry, but I cannot answer that question, as it is not included in the documents uploaded."
         
-        # Filter messages to exclude any containing the specified AI response
-        self.messages = [
-            {"role": "user", "content": message['message']}
-            for message in messages_query.values('message')[::-1]  # Reverse to maintain correct order
-            if excluded_response not in message['message']  # Exclude specified response
-        ]
+        # Convert to BaseMessage objects
+        self._messages = []
+        for message in messages_query.values('message')[::-1]:  # Reverse to maintain correct order
+            if excluded_response not in message['message']:
+                self._messages.append(HumanMessage(content=message['message']))
 
-    def add_messages(self, message):
-        ChatHistory.objects.create(session_id=self.session_id, message=message)
-        self._load_messages()
+    @property
+    def messages(self) -> List[BaseMessage]:
+        """Return the list of messages."""
+        return self._messages
+
+    def add_message(self, message: BaseMessage) -> None:
+        """Add a message to the chat history."""
+        self._messages.append(message)
+        # Save to database
+        ChatHistory.objects.create(session_id=self.session_id, message=message.content)
+
+    def add_messages(self, messages: Sequence[BaseMessage]) -> None:
+        """Add multiple messages to the chat history."""
+        for message in messages:
+            self.add_message(message)
+
+    def clear(self) -> None:
+        """Clear all messages from the chat history."""
+        self._messages = []
+
 
 
 def get_session_history(user_id: str, conversation_id: str, chat_history_window_int=None): # Note: Even though user_id is not being used due to use of 'conversation_id' instead, LangChain expects it to be passed as a config for RunnableWithMessageHistory and thus, it must also be included here.
@@ -197,12 +224,14 @@ def stream_response_to_user(
         if model_provider == 'Anthropic':
             # Instructions for Anthropic API: https://python.langchain.com/docs/integrations/chat/anthropic/, https://python.langchain.com/api_reference/anthropic/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
             model = ChatAnthropic(
-                model=retriever_model,
+                model_name=retriever_model,  # Changed from 'model' to 'model_name'
                 temperature=user_profile.temperature,
-                max_tokens=1024,
+                max_tokens_to_sample=1024,
                 timeout=None,
                 max_retries=2,
                 top_p=top_p,
+                stop=None,  # Added required 'stop' parameter
+                streaming=True
                 # other params...
             )
         else:
@@ -320,11 +349,13 @@ def stream_response_to_user(
             )
 
         # Step 4: Set up LangChain's runnable framework which is used to manage how prompts and user inputs are sent to the OpenAI model while maintaining context.
+        
         runnable = prompt | model
+        
 
         # Step 5: Invoke LangChain's RunnableWithMessageHistory, we pass both the retrieved document, and the conversation history.
         with_message_history = RunnableWithMessageHistory(
-            runnable,
+            runnable, # type: ignore
             get_session_history,
             input_messages_key="input",
             history_messages_key="history",
@@ -345,7 +376,7 @@ def stream_response_to_user(
                     default="",
                     is_shared=True,
                 ),
-                ConfigurableFieldSpec(  # Add chat_history_window_int to match the function signature
+                ConfigurableFieldSpec(
                     id="chat_history_window_int",
                     annotation=int,
                     name="Chat History Window",
@@ -407,41 +438,51 @@ def stream_response_to_user(
         ):
             logger.debug(f'running stream_response_to_user() ... chunk is: { chunk }')
             
-            # Append the chunk to answer_chunks (this consolidated answer is used for topic extraction and expert recommendation)
-            answer_chunks.append(chunk.content)
+            # Safely extract content and ensure it's a string
+            chunk_content = ""
+            if hasattr(chunk, 'content'):
+                content = chunk.content
+                if isinstance(content, str):
+                    chunk_content = content
+                elif isinstance(content, dict):
+                    # Handle case where content is a dictionary
+                    chunk_content = str(content.get('text', '')) if 'text' in content else str(content)
+                else:
+                    chunk_content = str(content)
             
-            yield "id: {}\ndata: {}\n\n".format(event_id, chunk.content)
+            # Append the chunk to answer_chunks (this consolidated answer is used for topic extraction and expert recommendation)
+            answer_chunks.append(chunk_content)
+            
+            yield "id: {}\ndata: {}\n\n".format(event_id, chunk_content)
             event_id += 1
             time.sleep(0.1)  # Adjust the delay as needed
 
+        # Ensure answer_text is always a string
+        answer_text = "".join(str(chunk) for chunk in answer_chunks)
 
-        answer_text = "".join(answer_chunks)
-        
+        # Ensure answer_text is a string before using 'in' operator
+        if isinstance(answer_text, str):
+            pass
+        elif isinstance(answer_text, dict):
+            answer_text = answer_text.get("text", "")
+        else:
+            answer_text = str(answer_text)
+
         # If an answer was streamed to the user, proceed with listing sources and experts (if recommendations are turned on)
-        if context_available_phrase_translated in answer_text:
-            logger.debug(f'running stream_response_to_user() ... neither '
-                    f'no_answer_phrase { no_answer_phrase_translated }, nor '
-                    f'general_knowledge_phrase_translated: { general_knowledge_phrase_translated } '
-                    f'are in answer_text: { answer_text }, '
-                    f'proceeding to list sources ')
+        if isinstance(context_available_phrase_translated, str) and context_available_phrase_translated in answer_text:
+            logger.debug(f'running stream_response_to_user() ... proceeding to list sources')
 
             contributing_chunks = []
-            #used_text_chunks = [chunk.page_content for chunk in used_chunks]
-            #for chunk in retrieved_chunks:
-            #for chunk, score in retrieved_chunks:
-            # Capture the source(s) contributing to this chunk
-            #text_chunks = [chunk.page_content for chunk, _ in retrieved_chunks]
-            #text_chunks = [chunk.page_content for chunk in retrieved_chunks]]
             
             similarities = calculate_similarities(
-                retrieved_chunks = retrieved_chunks, 
-                answer_text = answer_text, 
+                retrieved_chunks=retrieved_chunks, 
+                answer_text=answer_text, 
                 user=user,
             )
 
             for chunk, similarity in zip(retrieved_chunks, similarities):
-            #for (chunk, _), similarity in zip(retrieved_chunks, similarities):
-                                
+                chunk_key = ""  # Initialize with default value
+                
                 if chunk.metadata['type'] == 'document':
                     doc_name = chunk.metadata['source']
                     doc_chunk_link_url = f"{settings.MEDIA_URL}{user.id}/{doc_name}"
@@ -449,14 +490,15 @@ def stream_response_to_user(
                     chunk_key = f"{doc_chunk_link}, {page_translated}, {int(chunk.metadata['page_number'])}<br>"
 
                 elif chunk.metadata['type'] == 'website':
-                    title = chunk.metadata.get('title', 'No Title Available')  # Fallback if title is missing
+                    title = chunk.metadata.get('title', 'No Title Available')
                     chunk_url = chunk.metadata.get('source')
                     chunk_url_formatted = f'<a href="{chunk_url}" target="_blank">{chunk_url}</a>'
-                    chunk_key = f"{ title }, { chunk_url_formatted }<br>"
+                    chunk_key = f"{title}, {chunk_url_formatted}<br>"
+                
+                # Only append if chunk_key was set
+                if chunk_key:
+                    contributing_chunks.append((chunk_key, similarity))
 
-                contributing_chunks.append((chunk_key, similarity))
-                #contributing_chunks.append((chunk_key, score))
-                #contributing_chunks.append(chunk_key)
             logger.debug(f'running stream_response_to_user() ... '
                         f'contributing_chunks is: { contributing_chunks }')
             
@@ -503,4 +545,8 @@ def stream_response_to_user(
         # Step 22: Send end of stream message
         yield "id: {}\ndata: [END]\n\n".format(event_id)
 
-    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    def event_stream_bytes():
+        for chunk in event_stream():
+            yield chunk.encode('utf-8')
+    
+    return StreamingHttpResponse(event_stream_bytes(), content_type="text/event-stream")
