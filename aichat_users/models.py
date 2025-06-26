@@ -27,7 +27,7 @@ class UserProfile(models.Model):
     preferred_language = models.CharField(max_length=6, null=True, default='en', blank=True)
     rag_sources_shown = models.CharField(max_length=100, null=True, blank=True, default='all') # Can be 'website', 'document' or 'all'
     rag_sources_used = models.CharField(max_length=100, null=True, blank=True, default='all') # Can be 'website', 'document' or 'all'
-    tokenization_and_vectorization_model = models.CharField(max_length=100, null=True, blank=True, default='bert-base-multilingual-cased')
+    tokenization_and_vectorization_model = models.CharField(max_length=100, null=True, blank=True, default='gpt-4o')
     preprocessing_model = models.CharField(max_length=100, null=True, blank=True, default='en_core_web_sm')
     similarity_metric = models.CharField(max_length=100, null=True, blank=True, default='cosine')
     retriever_model = models.CharField(max_length=100, null=True, blank=True, default='gpt-4o-mini')
