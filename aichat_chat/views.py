@@ -110,6 +110,8 @@ def delete_rag_sources(request):
             logger.error(f'Error during Pinecone operation: {e}')
             return JsonResponse({'status': 'error', 'message': _('Error deleting existing materials.'), 'errors': str(e)}, status=400)
 
+    else:
+        return JsonResponse({'status': 'success', 'message': _('Successfully deleted all materials previously uploaded.')})
 
 #-------------------------------------------------------------------------
 
@@ -350,7 +352,7 @@ def rag_docs(request):
             return JsonResponse({'status': 'error', 'message': f'An error occurred: {str(e)}'}, status=500)
         """
     # Handle GET requests (initial page load)
-    if request.method == 'GET':
+    else:
 
         # Pull the existing documents in the SQL DB, if any
         documents = RagSource.objects.filter(type=type, user=user)
@@ -840,7 +842,7 @@ def stream_response(request):
 
     
     # GET: Uses the stream_id to retrieve the stored context and streams the AI response back to the client
-    elif request.method == 'GET':
+    else:
         stream_id = request.GET.get('stream_id') # Get the stream_id provided by the JS
         
         # If stream_id is missing, throw an error
