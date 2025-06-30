@@ -33,7 +33,7 @@ DEBUG = False
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    '34.30.90.65',  # Your server IP
+    '34.122.234.120',  # Your server IP
     'kebayorantechnologies.com',
     'www.kebayorantechnologies.com',
 ]
