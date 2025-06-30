@@ -212,3 +212,4 @@ gitignored/
 
 # Uploaded reports
 media/
+.env
