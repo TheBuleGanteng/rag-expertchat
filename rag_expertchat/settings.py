@@ -40,7 +40,7 @@ ALLOWED_HOSTS = [
 
 # URL prefix configuration for reverse proxy
 #FORCE_SCRIPT_NAME = '/rag'
-USE_X_FORWARDED_HOST = True
+#USE_X_FORWARDED_HOST = True
 
 
 # Application definition
