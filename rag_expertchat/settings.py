@@ -22,23 +22,25 @@ load_dotenv(BASE_DIR / '.env')
 
 # Basic security settings
 SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
-
-
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    # Add your production domains here
+    '34.30.90.65',  # Your server IP
+    'kebayorantechnologies.com',
+    'www.kebayorantechnologies.com',
 ]
+
+# URL prefix configuration for reverse proxy
+FORCE_SCRIPT_NAME = '/rag'
+USE_X_FORWARDED_HOST = True
 
 
 # Application definition
