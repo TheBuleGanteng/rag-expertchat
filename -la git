@@ -1,0 +1,13 @@
+[1mdiff --git a/rag_expertchat/settings.py b/rag_expertchat/settings.py[m
+[1mindex 84281f3..7b0f2c5 100644[m
+[1m--- a/rag_expertchat/settings.py[m
+[1m+++ b/rag_expertchat/settings.py[m
+[36m@@ -33,7 +33,7 @@[m [mDEBUG = False[m
+ ALLOWED_HOSTS = [[m
+     '127.0.0.1',[m
+     'localhost',[m
+[31m-    '34.122.234.120',  # Your server IP[m
+[32m+[m[32m    '35.238.181.177',  # Your server IP[m
+     'kebayorantechnologies.com',[m
+     'www.kebayorantechnologies.com',[m
+ ][m
