@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Determine the base path dynamically
     const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
     console.log(`running uservalidation.js ... basePath is: ${basePath}`);
+    console.log(`running uservalidation.js ... window.location.pathname is: ${window.location.pathname}`);
     
     
     /*
