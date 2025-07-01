@@ -36,6 +36,7 @@ ALLOWED_HOSTS = [
     '35.238.181.177',  # Your server IP
     'kebayorantechnologies.com',
     'www.kebayorantechnologies.com',
+    'rag-app'
 ]
 
 # URL prefix configuration for reverse proxy
