@@ -93,6 +93,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'rag_expertchat.wsgi.application'
 
 
+# CSRF settings for reverse proxy
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
