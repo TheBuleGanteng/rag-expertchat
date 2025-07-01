@@ -213,3 +213,4 @@ gitignored/
 # Uploaded reports
 media/
 .env
+gmail_access_credentials.json

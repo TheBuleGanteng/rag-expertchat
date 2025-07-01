@@ -140,7 +140,7 @@ def send_email(body, recipient, sender, subject):
     
     try:
         # Path to the service account file
-        SERVICE_ACCOUNT_FILE = os.path.join(settings.BASE_DIR, 'gitignored', 'gmail_access_credentials.json')
+        SERVICE_ACCOUNT_FILE = os.path.join(settings.BASE_DIR, 'gmail_access_credentials.json')
 
         # Define the required scope for sending emails
         SCOPES = ['https://www.googleapis.com/auth/gmail.send']
