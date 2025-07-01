@@ -3,6 +3,12 @@ import { csrfToken, debounce } from './utils.js'
 document.addEventListener('DOMContentLoaded', function() {
     console.log(`running uservalidation.js ... DOM content loaded`);
     console.log(`running uservalidation.js ... current origin is: ${ window.location.origin }`);
+
+
+
+    // Determine the base path dynamically
+    const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
+    console.log(`running uservalidation.js ... basePath is: ${basePath}`);
     
     
     /*
@@ -153,7 +159,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return resolve(false);
                 }
                 // If password is not blank, then toss the value over to the /check_password_strength in app.py
-                fetch('/aichat/check_password_valid/', {
+                const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
+
+                fetch(`${basePath}/${currentApp}/check_password_valid/`, {
                     method: 'POST',
                     body: new URLSearchParams({ 
                         'password': password,
@@ -228,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If password is not blank, then toss the value over to the /check_password_strength
                 const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
 
-                fetch(`/${currentApp}/check_password_valid/`, {
+                fetch(`${basePath}/${currentApp}/check_password_valid/`, {
                     method: 'POST',
                     body: new URLSearchParams({ 
                         'password': password,
