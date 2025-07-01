@@ -3,6 +3,13 @@
 import { csrfToken } from './utils.js';
 import { showSpinner, hideSpinner } from './loadingspinner.js';
 
+// Determine the base path dynamically
+const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
+const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
+console.log(`running favorites.js ... basePath is: ${basePath}`);
+console.log(`running favorites.js ... window.location.pathname is: ${window.location.pathname}`);
+console.log(`running favorites.js ... currentApp is: ${currentApp}`);
+
 export function jsFavoriteIconMonitor() { 
 
     const favoriteIcons = document.getElementsByName('favorite-icon');
@@ -40,43 +47,27 @@ export function jsFavoriteIconMonitor() {
 function updateFavorite(iconExpertId) {
     showSpinner(); // Show the spinner
 
-    fetch('/aichat/update_favorites/', {
+    fetch(`${basePath}/${currentApp}/update_favorites/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': csrfToken
         },
         body: `expert_id=${iconExpertId}`,
-    })
-    .then(response => {
+        })
+        .then(response => {
         hideSpinner(); // Hide the spinner
         if (response.ok) {
             console.log(`running favorites.js ... favorite updated successfully`);
             // Optionally, you could update the UI further here if needed
         } else {
             console.error(`running favorites.js ... failed to update favorite`);
-            // Revert the star icon state if the request failed
-            if (isFavorite) {
-                icon.classList.remove('bi-star');
-                icon.classList.add('bi-star-fill');
-            } else {
-                icon.classList.remove('bi-star-fill');
-                icon.classList.add('bi-star');
-            }
             alert('Failed to update favorite. Please try again.');
         }
     })
     .catch(error => {
         hideSpinner(); // Hide the spinner
         console.error(`running favorites.js ... error updating favorite: ${error}`);
-        // Revert the star icon state if there's an error
-        if (isFavorite) {
-            icon.classList.remove('bi-star');
-            icon.classList.add('bi-star-fill');
-        } else {
-            icon.classList.remove('bi-star-fill');
-            icon.classList.add('bi-star');
-        }
         alert('An error occurred while updating favorite. Please try again.');
     });
 }

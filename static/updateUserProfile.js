@@ -4,7 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log(`running updateUserProfile.js ... DOM content loaded`);
     console.log(`running updateUserProfile.js ... current origin is: ${ window.location.origin }`);
 
-    
+    // Determine the base path dynamically
+    const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
+    const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
+    console.log(`running updateUserProfile.js ... basePath is: ${basePath}`);
+    console.log(`running updateUserProfile.js ... window.location.pathname is: ${window.location.pathname}`);
+    console.log(`running updateUserProfile.js ... currentApp is: ${currentApp}`);
     
     // The JS below detects a change in elements w/ attribute form-element="profileForm"
     // A change in any such element is saved to the logged-in user's profile
@@ -85,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateModelInfo() {
 
         // Step 1: Make an AJAX call to initially load index html with the formset, including the current user data from the DB
-        const modelDataUrl = '/aichat/model_data/';
+        const modelDataUrl = `${basePath}/${currentApp}/model_data/`;
         console.log(`running updateModelInfo() ... modelDataUrl is: ${ modelDataUrl }`);
 
         const  preprocessingModelLinkDiv = document.getElementById('preprocessing-model-additional-info-link');

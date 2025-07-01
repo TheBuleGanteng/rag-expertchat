@@ -14,6 +14,15 @@ if (csrfMeta) {
 export { csrfToken };
 
 
+//------------------------------------------------------------------------------
+
+
+
+// Determine the base path dynamically
+const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
+const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
+
+
 
 //------------------------------------------------------------------------------
 
@@ -115,10 +124,8 @@ export function formatTimestamp(timestamp, timezone = 'Asia/Jakarta') {
 // Triggers aichat_chat generate_embeddings, which generates the embeddings and retriever
 export function generateEmbeddings() {
     console.log(`running utils.js ... running generateEmbeddings()`);
-
-    const generateEmbeddingsUrl = '/aichat/generate_embeddings/';
-    
-    return fetch(generateEmbeddingsUrl, {
+     
+    return fetch(`${basePath}/${currentApp}/generate_embeddings/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': csrfToken,
@@ -149,6 +156,7 @@ export function generateEmbeddings() {
 
 // Submits various forms via Ajax, which allows for form submission without page reload
 export function handleAjaxFormSubmission(url, formData) {
+    
     return fetch(url, {
         method: 'POST',
         body: formData,
@@ -186,10 +194,8 @@ export function loadChatHistorySidebar() {
     const chatHistoryParentDiv = document.getElementById('chat-history-div')
 
     if (chatHistoryParentDiv) {    
-        const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
-
         // Send the form data using fetch API
-        fetch(`/${currentApp}/retrieve-chat-history/`, {
+        fetch(`${basePath}/${currentApp}/retrieve-chat-history/`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -478,8 +484,8 @@ export function updateProfileForm(fieldName, fieldValue) {
     formData.append('value', fieldValue);  // Use the field value from the input
 
     // If password is not blank, then toss the value over to the /check_password_strength
-    const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
-    const updateProfileUrl = `/${currentApp}/update_profile/`;
+    // Determine the base path dynamically
+    const updateProfileUrl = `${basePath}/${currentApp}/update_profile/`;
     console.log(`running updateProfileForm() ... updateProfileUrl is: ${ updateProfileUrl }`);
 
     handleAjaxFormSubmission(updateProfileUrl, formData)

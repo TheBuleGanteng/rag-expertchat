@@ -4,19 +4,25 @@ import { showSpinner, hideSpinner } from './loadingspinner.js';
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Determine the base path dynamically
+    const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
+    const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
+    const updateProfileUrl = `${basePath}/${currentApp}/update_profile/`;
+    console.log(`running setRagSourcesUsed() ... updateProfileUrl is: ${ updateProfileUrl }`);
+    console.log(`running ragUrlMgmt.js ... basePath is: ${basePath}`);
+    console.log(`running ragUrlMgmt.js ... currentApp is: ${currentApp}`);
+    console.log(`running ragUrlMgmt.js ... window.location.pathname is: ${window.location.pathname}`);
+
 
     // Injects the html for RAG URL formset and manages submission of RagUrlFormSet
     function populateRagUrlFormset() {
-        console.log(`running ragsources.js ... function started`);
+        console.log(`running ragUrlMgmt.js ... function started`);
 
         const RagUrlFormCardBody = document.getElementById('RagUrlFormCardBody')
         if (RagUrlFormCardBody) {
 
             // Step 1: Make an AJAX call to initially load index html with the formset, including the current user data from the DB
-            const ragUrlsViewUrl = '/aichat/rag_url/';
-            console.log(`running ragsources.js ... ragUrlsUrl is: ${ ragUrlsViewUrl }`);
-
-            fetch(ragUrlsViewUrl, {
+            fetch(`${basePath}/${currentApp}/rag_url/`, {
                 method: 'GET',  // Assuming this is a GET request
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest', // This tells Django it's an AJAX request
@@ -36,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(data => {
                 RagUrlFormCardBody.innerHTML = data.html; // Inject the formset into the container
-                console.log(`running ragsources.js ... formset injected to container and event listeners initially applied to add and remove icons`);
+                console.log(`running ragUrlMgmt.js ... formset injected to container and event listeners initially applied to add and remove icons`);
 
                 // Now that the initial fetch has happened, select the newly-populated UrlForm
                 const ragUrlForm =  document.getElementById('RagUrlForm'); // The form that was injected into index.html via the JS above
@@ -48,14 +54,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         // Add a new row when the 'add' icon is clicked
                         if (target.id === 'add-additional-url-icon') {
-                            console.log('running ragsources.js ... remove-icon-url event listener detected click, running addFormToFormset');
+                            console.log('running ragUrlMgmt.js ... remove-icon-url event listener detected click, running addFormToFormset');
                             event.preventDefault();
                             addFormToFormset();
                         }
 
                         // Remove the relevent row when it's associated 'remove' icon is clicked
                         if (target.getAttribute('name') === 'remove-icon-url') {
-                            console.log('running ragsources.js ... remove-icon-url event listener detected click, running removeFormFromFormset(formRow)');
+                            console.log('running ragUrlMgmt.js ... remove-icon-url event listener detected click, running removeFormFromFormset(formRow)');
                             event.preventDefault();  // Prevent default behavior
                             const formRow = target.closest('.row');  // Find the closest form row
                             removeFormFromFormset(formRow); // Call function to remove the form row
@@ -67,12 +73,12 @@ document.addEventListener('DOMContentLoaded', function () {
         
                     // Listen for UrlForm submission
                     ragUrlForm.addEventListener('submit', function(event) {
-                        console.log(`running ragsources.js ... form submission detected`);
+                        console.log(`running ragUrlMgmt.js ... form submission detected`);
 
                         event.preventDefault(); // Prevent default form submission
                         const formData = new FormData(ragUrlForm)  // Collects the form data submitted
 
-                        handleAjaxFormSubmission(ragUrlsViewUrl, formData)
+                        handleAjaxFormSubmission(`${basePath}/${currentApp}/rag_url/`, formData)
                         .then(data => {
                             if (data.status === 'success') {
                                 console.log('Form submitted successfully!');
@@ -112,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const formsetContainer = document.getElementById('formset-container'); // The container inside the form that holds the URL records
         const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS'); // Fetch the total forms input
         const totalForms = parseInt(totalFormsInput.value); // Fetch the current number of forms dynamically
-        console.log(`running ragsources.js ... before running addFormToFormset, totalFormsInput.value is: ${ totalFormsInput.value }`);
+        console.log(`running ragUrlMgmt.js ... before running addFormToFormset, totalFormsInput.value is: ${ totalFormsInput.value }`);
 
         // Create a new row div for the form inputs
         const rowDiv = document.createElement('div');
@@ -174,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Update the total forms in the management form
         totalFormsInput.value = totalForms + 1;
-        console.log(`running ragsources.js ... after running addFormToFormset, totalFormsInput.value is: ${ totalFormsInput.value }`);
+        console.log(`running ragUrlMgmt.js ... after running addFormToFormset, totalFormsInput.value is: ${ totalFormsInput.value }`);
     }
     
 
@@ -187,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Find the DELETE checkbox inside the formRow
         const deleteCheckbox = formRow.querySelector('input[name*="DELETE"]');  // Target the remove-checkbox
-        console.log(`running ragsources.js ... found deleteCheckbox: ${ deleteCheckbox }`);
+        console.log(`running ragUrlMgmt.js ... found deleteCheckbox: ${ deleteCheckbox }`);
         
         if (deleteCheckbox) {
             // Mark the form as deleted
@@ -220,9 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 formData.append('field', 'rag_sources_used');
                 formData.append('value', 'document');
                 
-                const updateProfileUrl = '/aichat/update_profile/';
-                console.log(`running setRagSourcesUsed() ... updateProfileUrl is: ${ updateProfileUrl }`);
-
                 handleAjaxFormSubmission(updateProfileUrl, formData)
                 .then(data => {
                     if (data.status === 'success') {
@@ -249,9 +252,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const formData = new FormData();
                 formData.append('field', 'rag_sources_used');
                 formData.append('value', 'all');
-                
-                const updateProfileUrl = '/aichat/update_profile/';
-                console.log(`running setRagSourcesUsed() ... updateProfileUrl is: ${ updateProfileUrl }`);
 
                 handleAjaxFormSubmission(updateProfileUrl, formData)
                 .then(data => {
@@ -282,9 +282,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 formData.append('field', 'rag_sources_used');
                 formData.append('value', 'website-index');
 
-                const updateProfileUrl = '/aichat/update_profile/';
-                console.log(`running setRagSourcesUsed() ... updateProfileUrl is: ${ updateProfileUrl }`);
-
                 // This first (outer) try-catch updates user.aichat_userprofile.rag_sources_used
                 try {
                     const data = await handleAjaxFormSubmission(updateProfileUrl, formData) 
@@ -296,12 +293,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         try {
                             const response = await generateEmbeddings();
                             if (response.status === 'success') {
-                                console.log('running ragsources.js ... generateEmbeddings ran successfully:', response);                      
+                                console.log('running ragUrlMgmt.js ... generateEmbeddings ran successfully:', response);                      
                                 populateRagDocForm();  // Refresh the form with the newly uploaded files
                                 transitionAccordionTwoToThree(); 
                                 alert(response.message);
                             } else {
-                                console.log('running ragsources.js ... error running generateEmbeddings:', response);
+                                console.log('running ragUrlMgmt.js ... error running generateEmbeddings:', response);
                                 alert(response.message);   
                             }
                         } catch (error) {

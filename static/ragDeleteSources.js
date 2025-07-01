@@ -4,6 +4,12 @@ import { showSpinner, hideSpinner } from './loadingspinner.js';
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Determine the base path dynamically
+    const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
+    const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
+    console.log(`running ragDeleteSources.js ... basePath is: ${basePath}`);
+    console.log(`running ragDeleteSources.js ... window.location.pathname is: ${window.location.pathname}`);
+    console.log(`running ragDeleteSources.js ... currentApp is: ${currentApp}`);
 
     // Calls aichat_chat/views.py/delete_rag_sources to delete all ragsources and vectors from SQL, all files from disk, and all vectors from pinecone 
     
@@ -64,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(`running jsShowConfirmationAndDelete`)
         
         
-        const deleteRagSourcesUrl = '/aichat/delete_rag_sources/';
+        const deleteRagSourcesUrl = `${basePath}/${currentApp}/delete_rag_sources/`;
         const confirmationModalElement = document.getElementById('confirmationModal');
         const confirmationModal = new bootstrap.Modal(confirmationModalElement);
         const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');

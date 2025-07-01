@@ -3,20 +3,26 @@ import { csrfToken, transitionAccordionTwoToThree} from './utils.js'
 import { hideSpinner } from './loadingspinner.js';
 
 document.addEventListener('DOMContentLoaded', function () {
+    console.log(`running ragDocMgmt.js ... DOM content loaded`);
+    console.log(`running ragDocMgmt.js ... current origin is: ${ window.location.origin }`);
+
+    // Determine the base path dynamically
+    const basePath = window.location.pathname.includes('/rag/') ? '/rag' : '';
+    const currentApp = window.location.pathname.includes('/avatar/') ? 'avatar' : 'aichat';
+    console.log(`running ragDocMgmt.js ... basePath is: ${basePath}`);
+    console.log(`running ragDocMgmt.js ... currentApp is: ${currentApp}`);
+    console.log(`running ragDocMgmt.js ... window.location.pathname is: ${window.location.pathname}`);
 
     
     // Injects the html from rag_docs_form.html and initial population/submission of RagDocForm
     function populateRagDocForm() {
-        console.log(`running ragsources.js ... populateRagDocForm() function started`);
+        console.log(`running ragDocMgmt.js ... populateRagDocForm() function started`);
 
         const RagDocsFormCardBody = document.getElementById('RagDocsFormCardBody')
         if (RagDocsFormCardBody) {
 
             // Step 1: Make an AJAX call to initially load index html with the formset, including the current user data from the DB
-            const ragDocsViewUrl = '/aichat/rag_docs/';
-            console.log(`running ragsources.js ... ragDocsViewUrl is: ${ ragDocsViewUrl }`);
-
-            fetch(ragDocsViewUrl)
+            fetch(`${basePath}/${currentApp}/rag_docs/`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}, error: ${ response.error }`);
@@ -25,10 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(html => {
                 RagDocsFormCardBody.innerHTML = html; // Inject the formset into the container
-                console.log(`running ragsources.js ... rag_docs_form.html injected into index.html`);
+                console.log(`running ragDocMgmt.js ... rag_docs_form.html injected into index.html`);
 
                 setRemoveFileIconListeners();
-                console.log(`running ragsources.js ... setRemoveFileIconListeners(); run on inital files, if any.`);
+                console.log(`running ragDocMgmt.js ... setRemoveFileIconListeners(); run on inital files, if any.`);
 
 
 
@@ -43,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     let selectDirectoryLink = document.getElementById("select-directory-link");
                     
                     if (fileUploadArea) {
-                        console.log(`running ragsources.js ... fileUploadArea detected`);
+                        console.log(`running ragDocMgmt.js ... fileUploadArea detected`);
 
                         // Check if there are existing files
                         let existingFilesCount = document.getElementById('file-list').dataset.existingFiles;
@@ -51,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         // Move files declaration inside function scope
                         let files = fileElem.files;  // Assign files to the file input
-                        console.log(`running ragsources.js ... files is: ${ files }`);
+                        console.log(`running ragDocMgmt.js ... files is: ${ files }`);
 
                         ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
                             fileUploadArea.addEventListener(eventName, preventDefaults, false);
@@ -126,12 +132,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         RagDocForm.addEventListener('submit', function(event) {
             event.preventDefault();  // Prevent the form from submitting the default way (page reload)
-            console.log(`running ragsources.js ... RagDocForm submission detected`);
+            console.log(`running ragDocMgmt.js ... RagDocForm submission detected`);
             
-            const ragDocsViewUrl = '/aichat/rag_docs/';
-
             // Submit the form via fetch
-            fetch(ragDocsViewUrl, {
+            fetch(`${basePath}/${currentApp}/rag_docs/`, {
                 method: 'POST',
                 body: new FormData(RagDocForm),
                 headers: {
@@ -140,10 +144,11 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.statusText}`);
+                    throw new Error(`HTTP error! status: ${response.status}, error: ${ response.error }`);
                 }
                 return response.json();
-            })  // Parse the JSON response
+            })  
+            // Parse the JSON response
             .then(data => {
                 if (data.status === 'success') {
                     console.log('Form submission successful!');
@@ -157,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 console.error('Error during form submission:', error);
-                alert(`running setRagDocFormEventListener ... An unexpected error occurred: ${ error }`);
+                alert(`running ragDocMgmt.js ... An unexpected error occurred: ${ error }`);
                 hideSpinner();  // Hide the spinner in case of error
             });
         });
@@ -246,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Defines what to do when a remove-file-icon event listener is tripped (works with setRemoveFileIconListeners)
     function handleRemoveFileClick(e) {
-        console.log(`running ragsources.js ... remove icon clicked for element: ${ e.target }`);
+        console.log(`running ragDocMgmt.js ... remove icon clicked for element: ${ e.target }`);
         e.stopPropagation();  // Prevent the click event from bubbling up
     
         // Find the closest parent file-item and remove it
@@ -269,11 +274,11 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let j = 0; j < files.length; j++) {
             //if (j !== i) {
                 dataTransfer.items.add(files[j]);
-                console.log(`running ragsources.js ... adding file: ${files[j].name}`);
+                console.log(`running ragDocMgmt.js ... adding file: ${files[j].name}`);
             //}
         }
         document.getElementById('fileElem').files = dataTransfer.files;
-        console.log(`running ragsources.js ... dataTransfer.files.length is: ${ dataTransfer.files.length }`);
+        console.log(`running ragDocMgmt.js ... dataTransfer.files.length is: ${ dataTransfer.files.length }`);
     }
     
 
@@ -284,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Resets the RagDocForm
     function jsResetForm() {
-        console.log(`running ragsources.js, running jsResetForm() ... function started`)
+        console.log(`running ragDocMgmt.js, running jsResetForm() ... function started`)
 
         let form = document.getElementById('RagDocForm');
         form.reset();  // Reset the form to its initial state
@@ -293,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let fileList = document.getElementById('file-list');
         fileList.innerHTML = '';
         document.getElementById('docs-save-button').disabled = true;
-        console.log(`running ragsources.js, running jsResetForm() ... form reset`)
+        console.log(`running ragDocMgmt.js, running jsResetForm() ... form reset`)
     }
     
 
