@@ -39,8 +39,8 @@ ALLOWED_HOSTS = [
 ]
 
 # URL prefix configuration for reverse proxy
-#FORCE_SCRIPT_NAME = '/rag'
-#USE_X_FORWARDED_HOST = True
+FORCE_SCRIPT_NAME = os.getenv('FORCE_SCRIPT_NAME', None)
+USE_X_FORWARDED_HOST = os.getenv('USE_X_FORWARDED_HOST', 'False').lower() == 'true'
 
 
 # Application definition
