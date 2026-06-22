@@ -30,14 +30,36 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '35.238.181.177',  # Your server IP
-    'kebayorantechnologies.com',
-    'www.kebayorantechnologies.com',
-    'rag-app'
-]
+import socket
+import urllib.request
+
+
+def _gcp_external_ip():
+    # Best-effort: this GCP VM's current external IP. Returns None on any failure (timeout/non-GCP).
+    try:
+        req = urllib.request.Request(
+            "http://metadata.google.internal/computeMetadata/v1/instance/"
+            "network-interfaces/0/access-configs/0/external-ip",
+            headers={"Metadata-Flavor": "Google"},
+        )
+        with urllib.request.urlopen(req, timeout=0.3) as r:
+            return (r.read().decode().strip() or None)
+    except Exception:
+        return None
+
+
+# Self-discovering ALLOWED_HOSTS: static hosts (overridable via the ALLOWED_HOSTS
+# env var) plus this VM's current external IP discovered from GCP metadata, so a
+# server IP change can never silently cause a DisallowedHost outage again.
+# (Previously hardcoded 35.238.181.177, which went stale after the VM IP changed.)
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get(
+    "ALLOWED_HOSTS",
+    "kebayorantechnologies.com,www.kebayorantechnologies.com,localhost,127.0.0.1,rag-app"
+).split(",") if h.strip()]
+
+for _ip in (_gcp_external_ip(), socket.gethostbyname(socket.gethostname())):
+    if _ip and _ip not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_ip)
 
 # URL prefix configuration for reverse proxy
 FORCE_SCRIPT_NAME = os.getenv('FORCE_SCRIPT_NAME', None)
