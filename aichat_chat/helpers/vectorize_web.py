@@ -1,13 +1,15 @@
 from django.utils import timezone
+import ipaddress
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import logging
 from ..models import Vector
 import os
+import socket
 import spacy
 from translations.helpers.translate import detect_language
 from urllib.parse import urlparse
-from .vectorize_helpers import clean_website_content, create_vector_id, CustomEmbeddings, connect_to_pinecone, preprocess, select_preprocessing_model, Website 
+from .vectorize_helpers import clean_website_content, create_vector_id, CustomEmbeddings, connect_to_pinecone, preprocess, select_preprocessing_model, Website
 
 
 # Set the settings module and logger
@@ -15,6 +17,41 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'homepage.settings')
 logger = logging.getLogger('django')
 
 __all__ = ['vectorize_web']
+
+
+# Light SSRF guard: the server fetches user-supplied URLs here, so a malicious URL
+# could point the server at internal/cloud-metadata addresses. Only allow public
+# http(s) hosts and reject anything that resolves to a private/loopback/link-local
+# (e.g. 169.254.169.254 metadata) / reserved address.
+def is_safe_public_url(url):
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False
+
+    if parsed.scheme not in ('http', 'https') or not parsed.hostname:
+        return False
+
+    try:
+        # Resolve every address the hostname maps to and reject if ANY is non-public.
+        infos = socket.getaddrinfo(parsed.hostname, None)
+    except Exception:
+        logger.error(f'running is_safe_public_url() ... could not resolve host for url: { url }')
+        return False
+
+    for info in infos:
+        ip_str = info[4][0]
+        try:
+            ip = ipaddress.ip_address(ip_str)
+        except ValueError:
+            return False
+        if (ip.is_private or ip.is_loopback or ip.is_link_local
+                or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
+            logger.error(f'running is_safe_public_url() ... rejected non-public address '
+                         f'{ ip_str } for url: { url }')
+            return False
+
+    return True
 
 
 # Function to vectorize website and store it in Pinecone
@@ -50,7 +87,12 @@ def vectorize_web(
 
 
     # Step 2: Load the urls via LangChain's WebBaseLoader
-    loader = WebBaseLoader(web_paths=urls)
+    # SSRF guard: only fetch URLs that resolve to public addresses.
+    safe_urls = [u for u in urls if is_safe_public_url(u)]
+    rejected_urls = [u for u in urls if u not in safe_urls]
+    if rejected_urls:
+        logger.error(f'running vectorize_web() ... skipping unsafe/non-public urls: { rejected_urls }')
+    loader = WebBaseLoader(web_paths=safe_urls)
     website_data = loader.load()
     logger.debug(f'running vectorize_web() ... website_data is: { website_data }')
 

@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`running streamResponse_aichat.js ... EventSource URL: /aichat/stream_response/?stream_id=${data.stream_id}`);
                 
                 let answerFeedItemInnerDiv; // Declare the inner div variable
+                let answerRawHtml = ""; // Accumulates the raw streamed answer HTML so it can be re-sanitized on each chunk
                 let sourcesMessage = ""; // Variable to hold sources message
 
                 // Handle incoming streaming messages from the server
@@ -104,7 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const questionFeedItemInnerDiv2 = document.createElement("div");
                         questionFeedItemInnerDiv2.setAttribute('class', 'border border-secondary border-1 rounded mt-1 mb-1 p-1 d-inline-block w-auto feed-message-human');
                         questionFeedItemInnerDiv2.setAttribute('questionFeedItemInnerDiv2', data.stream_id);
-                        questionFeedItemInnerDiv2.innerHTML = userInput;
+                        // User input is plain text - render as text, never as HTML (XSS).
+                        questionFeedItemInnerDiv2.textContent = userInput;
                         questionFeedItemOuterDiv.appendChild(questionFeedItemInnerDiv2);
                         jsScrollDown();
 
@@ -118,8 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         answerFeedItemInnerDiv = document.createElement("div");
                         answerFeedItemInnerDiv.setAttribute('class', 'border border-dark border-2 rounded mt-5 mb-3 p-1 d-inline-block w-auto');
                         answerFeedItemInnerDiv.setAttribute('answerFeedItemInnerDiv', data.stream_id);
+                        answerRawHtml = ""; // Reset the accumulator for this new answer
                         answerFeedItemOuterDiv.appendChild(answerFeedItemInnerDiv);
-                    
+
                     } else if (event.data.startsWith('Expert:')) {
                         // Extract the expert data
                         let expertDataString = event.data.substring('Expert: '.length);
@@ -285,7 +288,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         //
                     } else {
                         if (answerFeedItemInnerDiv) {
-                            answerFeedItemInnerDiv.innerHTML += event.data;
+                            // LLM output and source content are untrusted (the model can be
+                            // steered by injected document/URL content). The server intentionally
+                            // emits formatting HTML (<br>, <b>, source links), so we accumulate the
+                            // raw stream and re-render it sanitized with DOMPurify on each chunk,
+                            // stripping any <script>/event-handler/inline-JS an attacker could inject.
+                            answerRawHtml += event.data;
+                            if (window.DOMPurify) {
+                                answerFeedItemInnerDiv.innerHTML = window.DOMPurify.sanitize(answerRawHtml);
+                            } else {
+                                // Fail safe: if the sanitizer didn't load, show text, never raw HTML.
+                                answerFeedItemInnerDiv.textContent = answerRawHtml;
+                            }
                         }
                     }
                     jsScrollDown();

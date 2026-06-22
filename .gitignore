@@ -214,3 +214,12 @@ gitignored/
 media/
 .env
 gmail_access_credentials.json
+
+# Collected static (build artifact, STATIC_ROOT)
+collected_static/
+
+# Claude code items
+CLAUDE*.md
+
+# CRDF compliance worksheet (kept untracked)
+CRDF_COMPLIANCE.md

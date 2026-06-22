@@ -1,0 +1,39 @@
+{% extends 'aichat_users/layout.html' %}
+{% load i18n %}
+
+{% block title %} - {% trans "Privacy Policy" %}{% endblock %}
+
+{% block main %}
+<div class="container py-4" style="max-width: 860px;">
+    <h1 class="mb-3">{% trans "Privacy Policy" %}</h1>
+    <p class="text-muted">{% trans "AiChat is a product of Kebayoran Technologies." %}</p>
+
+    <h2 class="h5 mt-4">{% trans "What we collect" %}</h2>
+    <ul>
+        <li>{% trans "Account information: your name, email address, and a securely hashed password (we never store your password in plain text)." %}</li>
+        <li>{% trans "Documents you upload and the text and vector embeddings derived from them." %}</li>
+        <li>{% trans "URLs you submit for ingestion and the text and embeddings derived from those pages." %}</li>
+        <li>{% trans "Your chat history (the questions you ask and the answers generated)." %}</li>
+        <li>{% trans "Basic session data needed to keep you logged in." %}</li>
+    </ul>
+
+    <h2 class="h5 mt-4">{% trans "How your content is processed" %}</h2>
+    <p>{% trans "To answer your questions, the content of your uploaded documents, ingested URLs, and chat messages is sent to third-party large language model (LLM) and embedding providers, including Anthropic and OpenAI, and to Hugging Face and spaCy models used for processing. These providers process the content to generate responses. We do not sell your data or use it for advertising." %}</p>
+
+    <h2 class="h5 mt-4">{% trans "Where your data is stored" %}</h2>
+    <p>{% trans "Account and chat records are stored in our application database. Uploaded files are stored on our application server. Vector embeddings of your documents and URLs are stored in a third-party vector database (Pinecone), scoped to your account." %}</p>
+
+    <h2 class="h5 mt-4">{% trans "Retention and deletion" %}</h2>
+    <p>{% trans "Your uploaded documents, their embeddings, and the associated records are retained until you delete them. You can remove individual sources or use \"Delete all data sources\" in the chat settings to delete your uploaded materials and their embeddings from our storage and the vector database at any time. Deleting your account removes your associated account data." %}</p>
+
+    <h2 class="h5 mt-4">{% trans "Cookies" %}</h2>
+    <p>{% trans "We use only first-party cookies that are strictly necessary to keep you signed in. We do not use third-party advertising or tracking cookies." %}</p>
+
+    <h2 class="h5 mt-4">{% trans "Contact" %}</h2>
+    <p>{% trans "Questions about this policy can be sent to Kebayoran Technologies via" %}
+        <a href="https://www.linkedin.com/company/kebayoran-technologies">{% trans "our company page" %}</a>.
+    </p>
+
+    <p class="mt-4"><a href="{% url 'aichat_chat:terms' %}">{% trans "Terms of Use" %}</a></p>
+</div>
+{% endblock %}

@@ -64,6 +64,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Adds CSP-Report-Only (with per-request nonce), Permissions-Policy and COOP.
+    # Sits high in the stack so request.csp_nonce is set before templates render.
+    'rag_expertchat.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -72,6 +75,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # For static files
 ]
+
+# Security headers handled by Django's own middleware (Part A).
+# HSTS is intentionally left to the TLS-terminating edge to avoid a second /
+# conflicting Strict-Transport-Security header from the app layer.
+SECURE_CONTENT_TYPE_NOSNIFF = True                      # X-Content-Type-Options: nosniff
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+X_FRAME_OPTIONS = 'DENY'                                # no view legitimately iframes itself
+
+# Defence-in-depth for session/CSRF cookies (the app is served over HTTPS at the edge).
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # CSRF token is read by JS (see csrf-token meta tag)
 
 ROOT_URLCONF = 'rag_expertchat.urls'
 
@@ -160,6 +174,11 @@ STATICFILES_DIRS = [
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Upload hardening (Part B): per-file cap enforced in RagDocForm.clean_file_path.
+MAX_UPLOAD_SIZE_MB = 25
+# Reject oversized request bodies before they reach the view.
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024  # 25 MB
 
 # Session settings (adapted from your homepage)
 SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours

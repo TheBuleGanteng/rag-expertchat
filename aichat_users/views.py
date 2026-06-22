@@ -17,7 +17,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import translation
 from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
 from django.utils.translation import activate, gettext_lazy as _
 from email.mime.text import MIMEText
@@ -304,7 +304,16 @@ def login_view(request):
                 })
                 logger.debug(f'running aichat_users app login_view ... session data before redirect: {request.session.items()} and session key after login is: {request.session.session_key}')
                 
-                redirect_url = request.GET.get('next') or reverse('aichat_chat:index')
+                # Validate ?next= against open-redirect: only allow same-origin/relative targets.
+                next_url = request.GET.get('next')
+                if next_url and url_has_allowed_host_and_scheme(
+                    next_url,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure(),
+                ):
+                    redirect_url = next_url
+                else:
+                    redirect_url = reverse('aichat_chat:index')
                 redirect_url_with_lang = f'{redirect_url}?lang={current_language}'
                 logger.info(f'running aichat_users app login_view ... '
                             f'user is: { user }, '

@@ -786,7 +786,39 @@ def index_view(request):
     logger.debug(f'running aichat_chat app, index_view ... context passed to the template is: {context}')
     
     return render(request, 'aichat_chat/index.html', context)
-        
+
+
+
+# -------------------------------------------------------------------------
+
+# Public legal/disclosure pages (no auth gate) - required for CRDF compliance.
+# The app stores user-uploaded documents and forwards content to a third-party LLM,
+# so the privacy disclosure must be reachable without logging in.
+
+@require_http_methods(['GET'])
+def privacy_view(request):
+    current_language = request.GET.get('lang', request.session.get('django_language', 'en'))
+    if current_language:
+        translation.activate(current_language)
+        request.session['django_language'] = current_language
+    context = {
+        'current_language': current_language,
+        'supported_languages': supported_languages_selected,
+    }
+    return render(request, 'aichat_chat/privacy.html', context)
+
+
+@require_http_methods(['GET'])
+def terms_view(request):
+    current_language = request.GET.get('lang', request.session.get('django_language', 'en'))
+    if current_language:
+        translation.activate(current_language)
+        request.session['django_language'] = current_language
+    context = {
+        'current_language': current_language,
+        'supported_languages': supported_languages_selected,
+    }
+    return render(request, 'aichat_chat/terms.html', context)
 
 
 # -------------------------------------------------------------------------

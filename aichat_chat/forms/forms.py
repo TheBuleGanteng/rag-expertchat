@@ -1,9 +1,12 @@
 from .custom_fields import *
 import decimal
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms import modelformset_factory
 from django.utils.translation import gettext_lazy as _
+import os
+import puremagic
 from ..models import RagSource
 
 __all__ = ['InputForm', 'RagDocForm', 'RagUrlForm', 'RagUrlFormSet']
@@ -93,13 +96,86 @@ class RagDocForm(forms.ModelForm):  # Use forms.Form instead of ModelForm
         super(RagDocForm, self).__init__(*args, **kwargs)
         self.initial['type'] = 'document' # Ensures the 'type' field is always set to 'document'
 
-    
-    # Custom validation to allow only certain file types
+    # Allowed document types this RAG app supports.
+    ALLOWED_EXTENSIONS = ['.pdf', '.txt', '.docx']
+
+    # Content/magic-byte families that are an acceptable match for each binary type.
+    # OOXML files (.docx) are ZIP containers, so puremagic may report any OOXML ext.
+    _MAGIC_OK = {
+        '.pdf': {'.pdf'},
+        '.docx': {'.docx', '.pptx', '.xlsx', '.zip'},
+    }
+
+    # Active/executable content types we reject outright when detected by *content*,
+    # regardless of the filename - defends against a renamed payload (e.g. evil.exe
+    # uploaded as report.pdf) and against stored-XSS carriers (.html/.svg). Only
+    # types with a DISTINCT magic signature belong here; ZIP-container formats
+    # (.jar/.apk/.xpi) are intentionally excluded because they are indistinguishable
+    # from a legitimate .docx (also a ZIP) by magic bytes alone, and would false-reject.
+    _DANGEROUS_DETECTED = {
+        '.exe', '.dll', '.com', '.msi', '.scr', '.elf', '.so', '.dylib',
+        '.class', '.html', '.htm', '.xhtml', '.svg', '.js', '.php',
+    }
+
+    # Custom validation: restrict to supported document types, validate by
+    # content (not just extension), and enforce a per-file size cap. This is a
+    # key reputation surface - the app stores user uploads on a flagged domain,
+    # so it must not become a host for executables or active HTML/SVG content.
     def clean_file_path(self):
         files = self.files.getlist('file_path')
-        allowed_extensions = ['.pdf', '.txt', '.docx']
+        max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
         for file in files:
-            if not any(file.name.endswith(ext) for ext in allowed_extensions):
-                raise forms.ValidationError(f"{file.name} has an invalid file type.")
+            ext = os.path.splitext(file.name)[1].lower()
+
+            # 1) Extension whitelist - rejects executables, .html/.htm, .svg, etc.
+            if ext not in self.ALLOWED_EXTENSIONS:
+                raise forms.ValidationError(
+                    _('%(name)s has an unsupported file type. Allowed types: PDF, TXT, DOCX.')
+                    % {'name': file.name}
+                )
+
+            # 2) Per-file size cap.
+            if file.size > max_bytes:
+                raise forms.ValidationError(
+                    _('%(name)s is too large (max %(mb)s MB).')
+                    % {'name': file.name, 'mb': settings.MAX_UPLOAD_SIZE_MB}
+                )
+
+            # 3) Content / magic-byte validation.
+            header = file.read(2048)
+            file.seek(0)  # reset so the view can save/vectorize the file afterwards
+            try:
+                detected_exts = {
+                    m.extension.lower()
+                    for m in puremagic.magic_string(header)
+                    if m.extension
+                }
+            except Exception:
+                detected_exts = set()
+
+            # Reject anything whose *content* is an active/executable type.
+            if detected_exts & self._DANGEROUS_DETECTED:
+                raise forms.ValidationError(
+                    _('%(name)s contents do not match its file type and were rejected.')
+                    % {'name': file.name}
+                )
+
+            expected = self._MAGIC_OK.get(ext)
+            if expected is not None:
+                # Binary types (pdf/docx) must actually look like that type.
+                if not (detected_exts & expected):
+                    raise forms.ValidationError(
+                        _('%(name)s contents do not match its file type and were rejected.')
+                        % {'name': file.name}
+                    )
+            else:
+                # .txt - reject binary content (null bytes are a strong binary signal).
+                if b'\x00' in header:
+                    raise forms.ValidationError(
+                        _('%(name)s does not appear to be a valid text file.')
+                        % {'name': file.name}
+                    )
+
         return files
 

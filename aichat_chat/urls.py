@@ -12,6 +12,10 @@ urlpatterns = [
     path('', lambda request: redirect('index/', permanent=False)),  # Temporary redirect to /index/
     path('index/', views.index_view, name='index'),
 
+    # Public legal/disclosure pages (no auth gate) - CRDF compliance
+    path('privacy/', views.privacy_view, name='privacy'),
+    path('terms/', views.terms_view, name='terms'),
+
     # API Routes
     path('delete_rag_sources/', views.delete_rag_sources, name = 'delete_rag_sources'),
     path('generate_embeddings/', views.generate_embeddings, name='generate_embeddings'),

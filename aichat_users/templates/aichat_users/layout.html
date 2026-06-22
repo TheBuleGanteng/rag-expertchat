@@ -28,7 +28,10 @@
     <!-- PDF.js CDN for viewing PDF files in-browser -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js" defer></script>
-    
+
+    <!-- DOMPurify: sanitizes untrusted LLM/streamed chat output before it is rendered as HTML -->
+    <script nonce='{{ request.csp_nonce }}' src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
     <!-- favicon -->
     <link href="{% static 'aichat_users/favicon_inex_one.ico' %}" rel="icon">
 
@@ -630,7 +633,9 @@
         <span>
             &copy; <a href='https://www.linkedin.com/company/kebayoran-technologies'>Kebayoran Technologies</a>, 2024
             <br>
-            {% trans "Leverages models from" %} <a href='https://spacy.io/'>spaCy</a>, <a href='https://huggingface.co/'>Hugging Face</a>, <a href='https://www.anthropic.com/'>Anthropic</a> and, <a href='https://platform.openai.com/'>OpenAI</a> 
+            {% trans "Leverages models from" %} <a href='https://spacy.io/'>spaCy</a>, <a href='https://huggingface.co/'>Hugging Face</a>, <a href='https://www.anthropic.com/'>Anthropic</a> and, <a href='https://platform.openai.com/'>OpenAI</a>
+            <br>
+            <a href='{% url "aichat_chat:privacy" %}'>{% trans "Privacy Policy" %}</a> &middot; <a href='{% url "aichat_chat:terms" %}'>{% trans "Terms of Use" %}</a>
         </span>
     </footer>
     <!-- /footer -->
