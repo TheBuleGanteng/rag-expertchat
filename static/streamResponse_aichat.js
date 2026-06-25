@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         console.log(`running streamResponse_aichat.js ... all settings data appended to formData`);
 
+        // Render the user's question into the feed immediately, before awaiting the
+        // network, so it appears the instant the user submits rather than only once
+        // the stream opens. The answer container is still created later, on [BEGIN].
+        renderQuestionImmediately(userInput, first_name, timestamp);
+
         // Send the form data using fetch API
         fetch(form.getAttribute('action'), {
             method: 'POST',
@@ -88,27 +93,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // If we see a BEGIN marker, we know it's a new message and thus, we need to create a new div
                     if (event.data === "[BEGIN]") {
-                        // Create the parent feed item for question
-                        const questionFeedItemOuterDiv = document.createElement("div");
-                        questionFeedItemOuterDiv.setAttribute('class', 'row w-100 justify-content-end d-flex flex-column align-items-end');
-                        questionFeedItemOuterDiv.setAttribute('questionFeedItemOuterDiv', data.stream_id);
-                        document.getElementById('feedDiv').appendChild(questionFeedItemOuterDiv);
-
-                        // Create the child feed item for question timestamp
-                        const questionFeedItemInnerDiv1 = document.createElement("div");
-                        questionFeedItemInnerDiv1.setAttribute('class', 'fs-7 fw-lighter fst-italic d-inline-block w-auto');
-                        questionFeedItemInnerDiv1.setAttribute('questionFeedItemInnerDiv1', data.stream_id);
-                        questionFeedItemInnerDiv1.innerHTML = first_name + ' asked at ' + timestamp;
-                        questionFeedItemOuterDiv.appendChild(questionFeedItemInnerDiv1);
-
-                        // Create the child feed item for the question
-                        const questionFeedItemInnerDiv2 = document.createElement("div");
-                        questionFeedItemInnerDiv2.setAttribute('class', 'border border-secondary border-1 rounded mt-1 mb-1 p-1 d-inline-block w-auto feed-message-human');
-                        questionFeedItemInnerDiv2.setAttribute('questionFeedItemInnerDiv2', data.stream_id);
-                        // User input is plain text - render as text, never as HTML (XSS).
-                        questionFeedItemInnerDiv2.textContent = userInput;
-                        questionFeedItemOuterDiv.appendChild(questionFeedItemInnerDiv2);
-                        jsScrollDown();
+                        // The question was already rendered on submit (see
+                        // renderQuestionImmediately); here we only build the answer
+                        // container that the streamed tokens append into.
 
                         // Create the parent feed item for the answer
                         const answerFeedItemOuterDiv = document.createElement("div");
@@ -324,6 +311,34 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Fetch error:', error);
             hideSpinner(); // Hide the spinner if there is a fetch error
         });
+    }
+
+    // Appends the user's question to the feed right away, so it is visible the moment
+    // the form is submitted - independent of the network round-trip and the stream.
+    function renderQuestionImmediately(userInput, first_name, timestamp) {
+        const feedDiv = document.getElementById('feedDiv');
+        if (!feedDiv) return;
+
+        // Create the parent feed item for the question
+        const questionFeedItemOuterDiv = document.createElement("div");
+        questionFeedItemOuterDiv.setAttribute('class', 'row w-100 justify-content-end d-flex flex-column align-items-end');
+        feedDiv.appendChild(questionFeedItemOuterDiv);
+
+        // Create the child feed item for question timestamp
+        const questionFeedItemInnerDiv1 = document.createElement("div");
+        questionFeedItemInnerDiv1.setAttribute('class', 'fs-7 fw-lighter fst-italic d-inline-block w-auto');
+        // first_name / timestamp are plain text - render as text, never as HTML (XSS).
+        questionFeedItemInnerDiv1.textContent = first_name + ' asked at ' + timestamp;
+        questionFeedItemOuterDiv.appendChild(questionFeedItemInnerDiv1);
+
+        // Create the child feed item for the question
+        const questionFeedItemInnerDiv2 = document.createElement("div");
+        questionFeedItemInnerDiv2.setAttribute('class', 'border border-secondary border-1 rounded mt-1 mb-1 p-1 d-inline-block w-auto feed-message-human');
+        // User input is plain text - render as text, never as HTML (XSS).
+        questionFeedItemInnerDiv2.textContent = userInput;
+        questionFeedItemOuterDiv.appendChild(questionFeedItemInnerDiv2);
+
+        jsScrollDown();
     }
 
 });

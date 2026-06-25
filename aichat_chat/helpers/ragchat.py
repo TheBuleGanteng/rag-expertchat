@@ -602,4 +602,13 @@ def stream_response_to_user(
         for chunk in event_stream():
             yield chunk.encode('utf-8')
     
-    return StreamingHttpResponse(event_stream_bytes(), content_type="text/event-stream")
+    response = StreamingHttpResponse(event_stream_bytes(), content_type="text/event-stream")
+    # Disable response buffering so tokens reach the browser as they are produced,
+    # rather than all at once when the connection closes:
+    #   - X-Accel-Buffering: no tells nginx (and similar proxies) not to buffer this
+    #     response - proxy buffering is the usual cause of "the whole answer appears
+    #     at once" in production even though the server streams correctly.
+    #   - Cache-Control: no-cache keeps any intermediary from caching the stream.
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    return response
